@@ -1,0 +1,203 @@
+<html>
+<head>
+<title>Auto Video Stickman — Installer</title>
+<HTA:APPLICATION
+  ID="Installer"
+  APPLICATIONNAME="Auto Video Stickman Installer"
+  BORDER="thin"
+  BORDERSTYLE="normal"
+  CAPTION="yes"
+  ICON=""
+  MAXIMIZEBUTTON="no"
+  MINIMIZEBUTTON="no"
+  SHOWINTASKBAR="yes"
+  SINGLEINSTANCE="yes"
+  SYSMENU="yes"
+  VERSION="1.0"
+  SCROLL="no"
+/>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; margin: 0; padding: 0; overflow: hidden; }
+  .header { background: linear-gradient(135deg, #16213e, #0f3460); padding: 24px 30px; text-align: center; border-bottom: 2px solid #e94560; }
+  .header h1 { margin: 0; font-size: 22px; color: #ffffff; letter-spacing: 1px; }
+  .header p { margin: 6px 0 0; font-size: 12px; color: #9aa2b5; }
+  .main { padding: 20px 30px; }
+  .step { background: #16213e; border: 1px solid #252b3d; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
+  .step-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; flex-shrink: 0; }
+  .step-icon.wait { background: #252b3d; color: #9aa2b5; }
+  .step-icon.run { background: #e94560; color: #fff; }
+  .step-icon.ok { background: #3ddc84; color: #08130c; }
+  .step-icon.fail { background: #ff6b6b; color: #fff; }
+  .step-text { flex: 1; }
+  .step-text b { display: block; font-size: 13px; color: #fff; }
+  .step-text span { font-size: 11.5px; color: #9aa2b5; }
+  .progress-wrap { background: #0f0f1a; border-radius: 20px; height: 16px; margin: 16px 0 10px; overflow: hidden; border: 1px solid #252b3d; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #e94560, #3ddc84); border-radius: 20px; transition: width 0.4s; }
+  .progress-label { text-align: center; font-size: 12px; color: #9aa2b5; margin-bottom: 16px; }
+  .log { background: #0f0f1a; border: 1px solid #252b3d; border-radius: 8px; padding: 10px 14px; height: 120px; overflow-y: auto; font-family: Consolas, monospace; font-size: 11px; line-height: 1.6; color: #9aa2b5; margin-bottom: 16px; }
+  .log .ok { color: #3ddc84; }
+  .log .err { color: #ff6b6b; }
+  .log .info { color: #4f8cff; }
+  .btn-row { text-align: center; }
+  .btn { padding: 12px 36px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin: 0 8px; transition: transform 0.1s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-install { background: #e94560; color: #fff; }
+  .btn-install:hover { background: #ff6b6b; }
+  .btn-open { background: #3ddc84; color: #08130c; }
+  .btn-open:hover { background: #50e897; }
+  .btn-close { background: #252b3d; color: #e0e0e0; }
+  .btn-close:hover { background: #353d52; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>&#9641; Auto Video Stickman — Installer</h1>
+  <p>Video stickman doodle edukatif — gratis, tanpa skill desain</p>
+</div>
+<div class="main">
+  <div class="step" id="s1">
+    <div class="step-icon wait" id="i1">1</div>
+    <div class="step-text"><b>Cek Node.js</b><span>Runtime untuk menjalankan pipeline</span></div>
+  </div>
+  <div class="step" id="s2">
+    <div class="step-icon wait" id="i2">2</div>
+    <div class="step-text"><b>Download project dari GitHub</b><span>Clone repo auto-video-stickman</span></div>
+  </div>
+  <div class="step" id="s3">
+    <div class="step-icon wait" id="i3">3</div>
+    <div class="step-text"><b>Install dependencies</b><span>npm install semua library yang dibutuhkan</span></div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
+  <div class="progress-label" id="plabel">Siap — klik Install untuk memulai</div>
+
+  <div class="log" id="logbox"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-install" id="btnInstall" onclick="startInstall()">Install</button>
+    <button class="btn btn-open" id="btnOpen" onclick="openGuide()" disabled>Buka Panduan</button>
+    <button class="btn btn-close" onclick="window.close()">Tutup</button>
+  </div>
+</div>
+
+<script>
+var shell = new ActiveXObject("WScript.Shell");
+var fso = new ActiveXObject("Scripting.FileSystemObject");
+var targetDir = shell.ExpandEnvironmentStrings("%USERPROFILE%") + "\\auto-video-stickman";
+var logbox = document.getElementById("logbox");
+var pbar = document.getElementById("pbar");
+var plabel = document.getElementById("plabel");
+var step = 0;
+
+function log(msg, cls) {
+  var d = document.createElement("div");
+  if (cls) d.className = cls;
+  d.innerHTML = msg;
+  logbox.appendChild(d);
+  logbox.scrollTop = logbox.scrollHeight;
+}
+
+function setStep(n, state) {
+  var icon = document.getElementById("i" + n);
+  icon.className = "step-icon " + state;
+  if (state === "ok") icon.innerHTML = "&#10003;";
+  else if (state === "fail") icon.innerHTML = "&#10007;";
+}
+
+function setProgress(pct, label) {
+  pbar.style.width = pct + "%";
+  if (label) plabel.innerHTML = label;
+}
+
+function runCmd(cmd) {
+  var exec = shell.Exec("cmd /c " + cmd);
+  var output = "";
+  while (!exec.StdOut.AtEndOfStream) {
+    output += exec.StdOut.ReadLine() + "\n";
+  }
+  while (!exec.StdErr.AtEndOfStream) {
+    output += exec.StdErr.ReadLine() + "\n";
+  }
+  return { exitCode: exec.ExitCode, output: output };
+}
+
+function startInstall() {
+  document.getElementById("btnInstall").disabled = true;
+  install();
+}
+
+function install() {
+  // Step 1: Cek Node.js
+  setStep(1, "run");
+  setProgress(10, "Mengecek Node.js...");
+  log("[~] Mengecek Node.js...", "info");
+
+  var r = runCmd("node -v");
+  if (r.exitCode !== 0) {
+    log("[!] Node.js belum ada. Menginstall via winget...", "info");
+    setProgress(15, "Install Node.js via winget...");
+    var inst = runCmd("winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements");
+    if (inst.exitCode !== 0) {
+      log("[!] Gagal install otomatis. Buka nodejs.org untuk install manual.", "err");
+      setStep(1, "fail");
+      shell.Run("https://nodejs.org");
+      return;
+    }
+    log("[OK] Node.js berhasil diinstall.", "ok");
+    setStep(1, "ok");
+  } else {
+    log("[OK] Node.js terdeteksi: " + r.output.replace(/\n/g, ""), "ok");
+    setStep(1, "ok");
+  }
+
+  // Step 2: Clone repo
+  setStep(2, "run");
+  setProgress(35, "Download project dari GitHub...");
+  log("[~] Clone repo...", "info");
+
+  if (fso.FolderExists(targetDir)) {
+    log("[~] Repo sudah ada, update...", "info");
+    r = runCmd("cd /d \"" + targetDir + "\" && git pull");
+  } else {
+    r = runCmd("git clone https://github.com/bagasabdullah05-blip/auto-video-stickman.git \"" + targetDir + "\"");
+  }
+
+  if (r.exitCode !== 0) {
+    log("[!] Gagal download. Cek koneksi internet.", "err");
+    setStep(2, "fail");
+    return;
+  }
+  log("[OK] Project berhasil di-download.", "ok");
+  setStep(2, "ok");
+
+  // Step 3: npm install
+  setStep(3, "run");
+  setProgress(65, "Install dependencies...");
+  log("[~] npm install (butuh beberapa menit)...", "info");
+
+  r = runCmd("cd /d \"" + targetDir + "\\agent\" && npm install");
+  if (r.exitCode !== 0) {
+    log("[!] Gagal install dependencies.", "err");
+    setStep(3, "fail");
+    return;
+  }
+  log("[OK] Semua dependencies terinstall.", "ok");
+  setStep(3, "ok");
+
+  // Selesai
+  setProgress(100, "Instalasi selesai!");
+  log("", "");
+  log("=== INSTALASI SELESAI ===", "ok");
+  log("Folder: " + targetDir, "info");
+  document.getElementById("btnOpen").disabled = false;
+  document.getElementById("btnInstall").disabled = true;
+  plabel.innerHTML = "Instalasi selesai! Klik \"Buka Panduan\" untuk memulai.";
+}
+
+function openGuide() {
+  shell.Run("explorer \"" + targetDir + "\\flow-kerja-video-stickman.html\"");
+}
+</script>
+</body>
+</html>
