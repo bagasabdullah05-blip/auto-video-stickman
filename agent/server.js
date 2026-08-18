@@ -106,14 +106,15 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   </div>
 </div>
 
-<div class="modal-overlay" id="modalVoices">
+<div class="modal-overlay" id="modalTTS">
   <div class="modal">
-    <h3>&#127908; Ganti Suara</h3>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Pilih suara untuk voice-over. Perubahan disimpan otomatis.</p>
-    <select id="voiceSelect" style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;min-height:200px"></select>
+    <h3>&#127908; Generate Suara (TTS)</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Pilih suara yang cocok dengan mood konten video kamu.</p>
+    <div id="voiceCards" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;max-height:300px;overflow-y:auto"></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">Suara saat ini: <b id="currentVoice" style="color:var(--text)"></b></div>
     <div class="btn-row">
-      <button class="btn btn-orange" onclick="closeModal('modalVoices')">Batal</button>
-      <button class="btn btn-green" onclick="applyVoice()">Simpan</button>
+      <button class="btn btn-orange" onclick="closeModal('modalTTS')">Batal</button>
+      <button class="btn btn-purple" onclick="runTTSFromModal()">Generate Suara</button>
     </div>
   </div>
 </div>
@@ -136,8 +137,8 @@ const CARDS = [
     desc:'<b>Langkah 1:</b> Generate script pakai AI (Claude/ChatGPT), lalu paste di sini.',
     actions:[{label:'Paste Script',cls:'btn-blue',fn:'openModalScript'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("01-script")'}]},
   { icon:'2', color:'var(--purple)', title:'Suara (TTS)', sub:'Text to Speech', id:'tts',
-    desc:'<b>Langkah 2:</b> Ubah script jadi audio MP3. Ganti suara di config.',
-    actions:[{label:'Generate Suara',cls:'btn-purple',fn:'runTTS()'},{label:'Ganti Suara',cls:'btn-orange',fn:'loadVoices()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("02-audio")'}]},
+    desc:'<b>Langkah 2:</b> Ubah script jadi audio MP3. Pilih suara sesuai mood konten.',
+    actions:[{label:'Generate Suara',cls:'btn-purple',fn:'openModalTTS()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("02-audio")'}]},
   { icon:'3', color:'var(--cyan)', title:'Timestamp (STT)', sub:'Transkrip + Jeda', id:'stt',
     desc:'<b>Langkah 3:</b> Deteksi jeda suara → timestamp per kalimat = 1 scene.',
     actions:[{label:'Generate Timestamp',cls:'btn-cyan',fn:'runSTT()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("03-prompt")'}]},
@@ -211,28 +212,63 @@ async function saveScript() {
   else { log('[!] Gagal: ' + d.error, 'err'); }
 }
 
-async function loadVoices() {
-  clearLog(); log('[~] Memuat daftar suara...', 'info');
+let selectedVoice = '';
+const VOICE_MOODS = {
+  'en-US-AndrewMultilingualNeural': { mood:'Tenang & Reflektif', cocok:'Sejarah, psikologi, evolusi, filosofi' },
+  'en-US-BrianMultilingualNeural': { mood:'Hangat & Grounding', cocok:'Sains, fakta, pengantar tidur' },
+  'en-US-EmmaMultilingualNeural': { mood:'Lembut & Intimate', cocok:'Cerita personal, emosional, relationship' },
+  'en-US-RogerNeural': { mood:'Stabil & Tegas', cocok:'Listicle, "5 hal yang...", edukasi' },
+  'en-US-ChristopherNeural': { mood:'Natural & Serius', cocok:'Mystery, conspiracy, teori' },
+  'en-US-AriaNeural': { mood:'Warm & Smooth', cocok:'Narasi wanita, lifestyle, self-care' },
+  'en-GB-RyanNeural': { mood:'Elegan (British)', cocok:'Sejarah Eropa, klasik, budaya' },
+  'en-US-DavisNeural': { mood:'Deep & Santai', cocok:'Sleep story, relaxation, meditasi' },
+  'en-US-GuyNeural': { mood:'Ceria & Energik', cocok:'Fun facts, hiburan, trending' },
+  'en-US-EricNeural': { mood:'Tegas & Jelas', cocok:'Tutorial, how-to, penjelasan' },
+  'en-IN-PrabhatNeural': { mood:'India, Natural', cocok:'Gaya Raunak, narasi India' },
+  'en-IN-DhruvNeural': { mood:'India, Alternatif', cocok:'Alternatif pria India' },
+  'en-AU-WilliamNeural': { mood:'Australia', cocok:'Aksen Australia, casual' },
+  'en-US-MichelleNeural': { mood:'Ceria (Wanita)', cocok:'Lifestyle, tips, trending' },
+  'id-ID-ArdiNeural': { mood:'Indonesia (Pria)', cocok:'Konten Bahasa Indonesia' },
+  'id-ID-GadisNeural': { mood:'Indonesia (Wanita)', cocok:'Konten Bahasa Indonesia' }
+};
+
+async function openModalTTS() {
   const r = await api('/api/voices');
-  const sel = document.getElementById('voiceSelect');
-  sel.innerHTML = r.voices.map(v => '<option value="' + v.id + '">' + v.id + ' — ' + v.nama + '</option>').join('');
-  openModal('modalVoices');
+  const cfg = await api('/api/status');
+  selectedVoice = cfg.config.voice;
+  const container = document.getElementById('voiceCards');
+  container.innerHTML = r.voices.map(v => {
+    const m = VOICE_MOODS[v.id] || { mood:'-', cocok:'-' };
+    const sel = v.id === selectedVoice ? 'border:2px solid var(--purple);background:#1a1535' : '';
+    return '<div onclick="pickVoice(\\''+v.id+'\\')" style="cursor:pointer;padding:10px;border-radius:10px;border:1px solid var(--border);background:#10131d;'+sel+'" id="vc-'+v.id.replace(/[^a-zA-Z]/g,'')+'">'+
+      '<div style="font-size:12px;font-weight:700;color:var(--text)">'+v.nama+'</div>'+
+      '<div style="font-size:10.5px;color:var(--purple);margin-top:2px">'+m.mood+'</div>'+
+      '<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+m.cocok+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('currentVoice').textContent = selectedVoice;
+  openModal('modalTTS');
 }
 
-async function applyVoice() {
-  const voice = document.getElementById('voiceSelect').value;
-  clearLog(); log('[~] Menyimpan suara: ' + voice, 'info');
-  const r = await fetch('/api/set-voice', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({voice}) });
-  const d = await r.json();
-  if (d.ok) { log('[OK] Suara diubah ke: ' + voice, 'ok'); closeModal('modalVoices'); refreshStatus(); }
+function pickVoice(id) {
+  selectedVoice = id;
+  document.querySelectorAll('#voiceCards > div').forEach(el => {
+    el.style.border = '1px solid var(--border)';
+    el.style.background = '#10131d';
+  });
+  const sel = document.getElementById('vc-' + id.replace(/[^a-zA-Z]/g,''));
+  if (sel) { sel.style.border = '2px solid var(--purple)'; sel.style.background = '#1a1535'; }
+  document.getElementById('currentVoice').textContent = id;
 }
 
-async function runTTS() {
-  clearLog(); log('[~] Menjalankan TTS...', 'info');
+async function runTTSFromModal() {
+  if (!selectedVoice) { alert('Pilih suara terlebih dahulu.'); return; }
+  closeModal('modalTTS');
+  clearLog(); log('[~] Menjalankan TTS dengan suara: ' + selectedVoice, 'info');
   log('[~] Ini mungkin butuh beberapa menit...', 'warn');
-  const r = await fetch('/api/run-tts');
+  const r = await fetch('/api/run-tts?voice=' + encodeURIComponent(selectedVoice));
   const d = await r.json();
-  if (d.ok) { log('[OK] Audio berhasil dibuat!', 'ok'); log(d.output, ''); }
+  if (d.ok) { log('[OK] Audio berhasil dibuat dengan suara: ' + selectedVoice, 'ok'); log(d.output, ''); }
   else { log('[!] Error: ' + d.error, 'err'); log(d.output || '', ''); }
   refreshStatus();
 }
@@ -391,7 +427,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const input = path.join(dir('script'), scriptFiles[scriptFiles.length - 1]);
-    const r = await runCommand('node', ['run.js', 'tts', '--input', input]);
+    const voice = url.searchParams.get('voice');
+    const args = ['run.js', 'tts', '--input', input];
+    if (voice) args.push('--voice', voice);
+    const r = await runCommand('node', args);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: r.code === 0, output: r.stdout + r.stderr }));
     return;
