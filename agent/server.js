@@ -119,6 +119,36 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   </div>
 </div>
 
+<div class="modal-overlay" id="modalMetadata">
+  <div class="modal" style="max-width:650px">
+    <h3>&#128200; Generate Metadata YouTube</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Tempel script video kamu. Sistem akan generate judul viral, deskripsi, dan tags SEO mengikuti pola master prompt.</p>
+    <textarea id="metadataScript" placeholder="Tempel script narasi di sini..." style="min-height:140px"></textarea>
+    <div class="btn-row">
+      <button class="btn btn-orange" onclick="closeModal('modalMetadata')">Batal</button>
+      <button class="btn btn-cyan" onclick="generateMetadata()">Generate Metadata</button>
+    </div>
+    <div id="metadataResult" style="display:none;margin-top:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:8px">&#9989; Hasil Metadata</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">VIRAL VIDEO TITLE</div>
+        <div id="metaTitle" style="background:#10131d;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text);cursor:pointer" onclick="copyText('metaTitle')" title="Klik untuk salin"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">VIDEO DESCRIPTION</div>
+        <div id="metaDesc" style="background:#10131d;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.6;cursor:pointer;max-height:200px;overflow-y:auto" onclick="copyText('metaDesc')" title="Klik untuk salin"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">VIRAL VIDEO TAGS (comma-separated)</div>
+        <div id="metaTags" style="background:#10131d;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;color:var(--text);cursor:pointer" onclick="copyText('metaTags')" title="Klik untuk salin"></div>
+      </div>
+      <div style="font-size:11px;color:var(--green);background:rgba(61,220,132,.06);border:1px dashed rgba(61,220,132,.3);border-radius:8px;padding:8px 12px;line-height:1.5">
+        <b>Metadata siap!</b> Klik tiap kotak untuk salin. Paste ke YouTube Studio: judul di title, deskripsi di description, tags di Tags field.
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalPrompts">
   <div class="modal">
     <h3>&#127912; Prompt Gambar</h3>
@@ -151,6 +181,9 @@ const CARDS = [
   { icon:'6', color:'var(--red)', title:'Rakit Video', sub:'Audio + Gambar = Video', id:'assemble',
     desc:'<b>Langkah 6:</b> Gabungkan gambar + audio jadi video MP4.',
     actions:[{label:'Rakit Video',cls:'btn-red',fn:'runAssemble()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("05-video")'}]},
+  { icon:'7', color:'var(--cyan)', title:'Metadata YouTube', sub:'Judul + Deskripsi + Tags', id:'metadata',
+    desc:'<b>Langkah 7:</b> Generate judul viral, deskripsi, dan tags SEO dari script.',
+    actions:[{label:'Generate Metadata',cls:'btn-cyan',fn:'openModalMetadata()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("05-video")'}]},
 ];
 
 let currentLog = '';
@@ -281,6 +314,67 @@ async function runSTT() {
   if (d.ok) { log('[OK] Timestamp & cutpoints berhasil dibuat!', 'ok'); log(d.output, ''); }
   else { log('[!] Error: ' + d.error, 'err'); log(d.output || '', ''); }
   refreshStatus();
+}
+
+function openModalMetadata() {
+  document.getElementById('metadataScript').value = '';
+  document.getElementById('metadataResult').style.display = 'none';
+  openModal('modalMetadata');
+}
+
+function extractKeywords(text) {
+  const stop = new Set('the a an is are was were be been being have has had do does did will would shall should may might can could of in to for on with at by from as into through during before after above below between out off over under again further then once here there when where why how all both each few more most other some such no not only own same so than too very s that this these those i me my we our you your he him his she her it its they them their what which who whom if about because but and or nor so yet still also just than more most much many well really going get got make made things thing way back even still'.split(' '));
+  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 3 && !stop.has(w));
+  const freq = {};
+  words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+  return Object.entries(freq).sort((a,b) => b[1] - a[1]).slice(0, 20).map(e => e[0]);
+}
+
+function generateMetadata() {
+  const script = document.getElementById('metadataScript').value.trim();
+  if (!script) { alert('Script harus diisi.'); return; }
+
+  const kw = extractKeywords(script);
+  const topic = kw.slice(0, 5).join(' ');
+  const sentences = script.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  const firstLines = sentences.slice(0, 3).map(s => s.trim()).join('. ');
+
+  const titlePatterns = [
+    'What Ancient Humans Knew About ' + (kw[0] || 'Life'),
+    'Why You Can\'t Stop ' + (kw[0] || 'Thinking'),
+    'The Hidden Truth About ' + (kw[0] || 'Your Brain'),
+    'What If We Are All ' + (kw[1] || 'Wrong'),
+    'You Never Noticed This About ' + (kw[0] || 'Your Body'),
+    'The Real Reason You ' + (kw[0] || 'Feel') + ' This Way',
+    'What ' + (kw[0] || 'Science') + ' Says About ' + (kw[1] || 'You'),
+    'Why Your Brain ' + (kw[0] || 'Lies') + ' To You Every Day',
+  ];
+  const title = titlePatterns[Math.floor(Math.random() * titlePatterns.length)];
+  const finalTitle = title.length > 70 ? title.substring(0, 67) + '...' : title;
+
+  const hashtags = kw.slice(0, 15).map(w => '#' + w).join(' ');
+  const desc = firstLines + '.\n\nIn this video, you\'ll discover the surprising truth about ' + topic + '. What you think you know is only the surface.\n\nIf this changed your perspective, hit like, drop a comment, and subscribe for more deep dives into the human experience.\n\n' + hashtags;
+
+  const broadTags = ['human evolution', 'psychology', 'anthropology', 'history', 'brain science', 'ancient humans', 'human behavior', 'neuroscience', 'science documentary', 'educational', 'mind explained', 'body language', 'sleep science', 'evolution explained', 'ancient history'];
+  const specificTags = kw.map(w => w.replace(/_/g, ' '));
+  const allTags = [...broadTags, ...specificTags].slice(0, 35);
+  const tags = allTags.join(', ');
+
+  document.getElementById('metaTitle').textContent = finalTitle;
+  document.getElementById('metaDesc').textContent = desc;
+  document.getElementById('metaTags').textContent = tags;
+  document.getElementById('metadataResult').style.display = 'block';
+  log('[OK] Metadata berhasil di-generate dari ' + kw.length + ' keyword.', 'ok');
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById(id);
+    const orig = el.style.borderColor;
+    el.style.borderColor = 'var(--green)';
+    setTimeout(() => { el.style.borderColor = orig; }, 800);
+  });
 }
 
 function openModalPrompts() {
