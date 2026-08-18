@@ -1,0 +1,845 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow Video Stick Man — Panduan Pemula</title>
+<style>
+  :root {
+    --bg:#0c0e14; --card:#151824; --card2:#1a1e2d; --border:#252b3d; --text:#e9ebf2; --muted:#9aa2b5;
+    --blue:#4f8cff; --green:#3ddc84; --orange:#ffa24c; --purple:#b07bff; --red:#ff6b6b; --cyan:#35e0c8;
+    --p1:#4f8cff; --p2:#b07bff; --p3:#35e0c8; --p4:#ffa24c; --p5:#3ddc84;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; padding:24px 12px 60px; }
+  .wrap { max-width:960px; margin:0 auto; }
+  h1 { text-align:center; font-size:24px; }
+  .sub { text-align:center; color:var(--muted); font-size:13px; margin:6px 0 22px; }
+
+  .tabs { display:flex; justify-content:center; gap:8px; margin-bottom:20px; }
+  .tab { padding:8px 20px; border-radius:24px; border:1px solid var(--border); background:var(--card); color:var(--muted); font-size:13px; cursor:pointer; }
+  .tab.active { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:700; }
+  .tabpane { display:none; }
+  .tabpane.active { display:block; }
+
+  .roadmap { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; justify-content:center; }
+  .road { flex:1; min-width:150px; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--bc); border-radius:12px; padding:10px 12px; cursor:pointer; transition:transform .15s; }
+  .road:hover { transform:translateY(-2px); }
+  .road .rn { font-size:11px; font-weight:800; color:var(--bc); text-transform:uppercase; letter-spacing:1px; }
+  .road .rt { font-size:14px; font-weight:700; margin-top:2px; }
+  .road .rs { font-size:11px; color:var(--muted); margin-top:2px; }
+  .road .rm { font-size:11px; color:var(--bc); margin-top:6px; font-weight:700; }
+
+  .prog { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:13px 18px; margin-bottom:22px; position:sticky; top:8px; z-index:5; }
+  .prog-top { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .prog-top b { color:var(--text); }
+  .bar { height:12px; background:#20263a; border-radius:20px; overflow:hidden; }
+  .bar-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--p1),var(--p2),var(--p3),var(--p4),var(--p5)); transition:width .35s; }
+  .prog-actions { margin-top:9px; }
+  .prog-actions button { background:#1d2433; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:12px; cursor:pointer; }
+  .prog-actions button:hover { border-color:var(--blue); }
+
+  .prep { background:linear-gradient(135deg,#121a2e,#151824); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:24px; }
+  .prep h2 { font-size:16px; color:var(--blue); margin-bottom:10px; }
+  .prep-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+  .prep-item { background:#10131d; border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.5; }
+  .prep-item b { display:block; margin-bottom:3px; color:var(--text); font-size:13px; }
+  .prep-item span { color:var(--muted); }
+
+  .phase { margin-bottom:32px; }
+  .phase-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .phase-badge { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#08130c; font-weight:900; font-size:17px; }
+  .phase-title { font-size:17px; font-weight:800; }
+  .phase-title small { display:block; font-size:12px; color:var(--muted); font-weight:400; }
+  .phase-count { margin-left:auto; font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:20px; padding:4px 12px; }
+
+  .steps { position:relative; padding-left:28px; }
+  .steps::before { content:''; position:absolute; left:9px; top:4px; bottom:4px; width:2px; background:linear-gradient(180deg,var(--bc),color-mix(in srgb,var(--bc) 35%,transparent)); }
+
+  .step { position:relative; background:var(--card); border:1px solid var(--border); border-left:4px solid var(--bc); border-radius:12px; padding:14px 16px 14px 20px; margin-bottom:14px; transition:opacity .2s; }
+  .step.done { opacity:.55; border-left-color:var(--green); }
+  .step .s-num { position:absolute; left:-28px; top:13px; width:20px; height:20px; border-radius:50%; background:var(--bc); color:#08130c; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; }
+  .step.done .s-num { background:var(--green); }
+  .step .s-top { display:flex; align-items:flex-start; gap:10px; }
+  .step h3 { font-size:15px; line-height:1.3; flex:1; }
+  .step .check { width:22px; height:22px; border-radius:7px; border:2px solid var(--muted); display:inline-flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex-shrink:0; margin-top:1px; }
+  .step.done .check { background:var(--green); border-color:var(--green); color:#08130c; }
+  .tool { font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; background:#1c2340; color:var(--bc); border:1px solid var(--border); white-space:nowrap; }
+  .step .s-body { max-height:0; overflow:hidden; transition:max-height .4s; }
+  .step.open .s-body { max-height:2000px; }
+  .meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip { font-size:11.5px; color:var(--muted); background:#10131d; border:1px solid var(--border); border-radius:20px; padding:3px 11px; }
+  .chip b { color:var(--text); }
+  .dolist { margin:10px 0 0; padding-left:0; list-style:none; counter-reset:d; }
+  .dolist li { counter-increment:d; font-size:13.5px; color:var(--muted); line-height:1.65; padding:5px 0 5px 30px; position:relative; }
+  .dolist li::before { content:counter(d); position:absolute; left:0; top:6px; width:20px; height:20px; border-radius:50%; background:#20263a; color:var(--bc); font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .dolist li b { color:var(--text); }
+  .expect { margin-top:10px; font-size:12.5px; color:var(--green); background:rgba(61,220,132,.06); border:1px dashed rgba(61,220,132,.3); border-radius:8px; padding:8px 12px; line-height:1.5; }
+  .expect b { color:var(--green); }
+  .note { border-left:3px solid var(--orange); background:#1d1a14; padding:8px 12px; border-radius:0 8px 8px 0; font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.55; }
+  .note.green { border-left-color:var(--green); } .note.green b{color:var(--green);} .note b{color:var(--orange);}
+  .acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .acts a,.acts button { text-decoration:none; font-size:12px; padding:7px 14px; border-radius:8px; border:1px solid var(--border); background:#1d2433; color:var(--text); cursor:pointer; }
+  .acts a:hover,.acts button:hover { border-color:var(--bc); }
+  .acts a.go { background:var(--bc); color:#08130c; font-weight:700; border-color:var(--bc); }
+  textarea { width:100%; background:#10131d; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12.5px; font-family:Consolas,monospace; margin-top:10px; min-height:90px; }
+
+  .connect { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-top:8px; }
+  .connect h2 { font-size:16px; color:var(--blue); margin-bottom:4px; }
+  .connect>p { font-size:13px; color:var(--muted); margin-bottom:10px; line-height:1.6; }
+  .conn { display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .conn .c-dot { width:11px; height:11px; border-radius:4px; flex-shrink:0; }
+  .conn b { font-size:14px; min-width:120px; }
+  .conn span { font-size:12.5px; color:var(--muted); flex:1; min-width:180px; }
+  .conn a { font-size:12px; padding:6px 14px; border-radius:8px; background:var(--blue); color:#fff; text-decoration:none; }
+
+  .transcript { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; }
+  .transcript h2 { font-size:16px; color:var(--purple); margin-bottom:10px; }
+  .transcript pre { white-space:pre-wrap; word-wrap:break-word; font-family:Consolas,'Courier New',monospace; font-size:12.5px; line-height:1.7; color:var(--text); }
+  .transcript .t-info { font-size:12.5px; color:var(--muted); margin-bottom:12px; line-height:1.5; }
+
+  .footer { text-align:center; color:var(--muted); font-size:11.5px; margin-top:28px; line-height:1.6; }
+  .arrow-down { width:2px; height:24px; background:var(--bc); margin:0 auto; position:relative; border-radius:2px; }
+  .arrow-down::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); border:5px solid transparent; border-bottom-color:var(--bc); border-top-width:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#9641; Flow Video Stick Man — Panduan Pemula</h1>
+  <p class="sub">5 fase, 11 langkah, panduan per-klik. Klik langkah untuk buka detail; centang saat selesai.</p>
+
+  <div class="tabs">
+    <div class="tab active" id="tabbtn-flow" onclick="switchTab('flow')">Flow Kerja</div>
+    <div class="tab" id="tabbtn-agent" onclick="switchTab('agent')">Agent (Otomatis)</div>
+    <div class="tab" id="tabbtn-transcript" onclick="switchTab('transcript')">Transkrip</div>
+  </div>
+
+  <div class="tabpane active" id="tab-flow">
+    <div class="roadmap" id="roadmap"></div>
+
+    <div class="prog">
+      <div class="prog-top"><span>Kemajuan: <b id="count">0/11</b> langkah</span><span id="pct">0%</span></div>
+      <div class="bar"><div class="bar-fill" id="fill"></div></div>
+      <div class="prog-actions"><button onclick="resetAll()">Reset semua</button></div>
+    </div>
+
+    <div class="prep">
+      <h2>Sebelum Mulai (sekali saja, ~15 menit)</h2>
+      <div class="prep-grid">
+        <div class="prep-item"><b>1. Daftar akun gratis</b><span>Claude AI, ElevenLabs, Faziscribe, Google Flow. Login pakai email Google supaya cepat. Semua pakai paket FREE.</span></div>
+        <div class="prep-item"><b>2. Siapkan folder proyek</b><span>Buat folder di komputer: <b>01-script</b>, <b>02-audio</b>, <b>03-prompt</b>, <b>04-gambar</b>, <b>05-video</b>. Semua hasil download ditaruh di folder sesuai.</span></div>
+        <div class="prep-item"><b>3. Salin master prompt</b><span>Buka video asli di YouTube &rarr; tab Komentar &rarr; urutkan &ldquo;Teratas&rdquo; &rarr; komentar pertama yang di-pin &rarr; salin semua teksnya.</span></div>
+        <div class="prep-item"><b>4. Siapkan browser</b><span>Gunakan Chrome. Pasang nanti ekstensi Zappy Flow di langkah 7. Pastikan internet stabil.</span></div>
+        <div class="prep-item"><b>5. Perkiraan waktu total</b><span>Video 100 scene &asymp; <b>3&ndash;4 jam</b> dari awal sampai upload.</span></div>
+      </div>
+    </div>
+
+    <div id="flow"></div>
+
+    <div class="connect">
+      <h2>Koneksi ke Program</h2>
+      <p>Semua program berbasis web &mdash; buka lewat tombol &ldquo;Buka&rdquo;, lalu daftar/login akun gratis.</p>
+      <div id="connList"></div>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tab-agent">
+    <div class="transcript">
+      <h2>Agent Otomatis — dijalankan dari opencode</h2>
+      <p class="t-info">Semua tahap otomatis (script, suara, timestamp, prompt gambar, rakit video) bisa dieksekusi langsung oleh agent opencode lewat toolkit di folder <b>agent</b>. Suara &amp; transkripsi <b>100% gratis, tanpa API key</b>. Gambar sementara manual (Google Flow + Zappy), API sudah disiapkan untuk nanti.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.6">
+        <tr style="color:var(--muted);text-align:left"><th style="padding:6px 8px;border-bottom:1px solid var(--border)">#</th><th style="padding:6px 8px;border-bottom:1px solid var(--border)">Tahap</th><th style="padding:6px 8px;border-bottom:1px solid var(--border)">Cara</th></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border)">1</td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><b>Script</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--border)">opencode menulis script pakai master prompt &rarr; <code>01-script</code></td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border)">2</td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><b>Suara</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><code>node run.js tts</code> &rarr; <code>02-audio</code></td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border)">3</td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><b>Timestamp</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><code>node run.js stt</code> &rarr; <code>03-prompt</code></td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border)">4</td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><b>Prompt gambar</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--border)">opencode menulis <code>image_prompts.txt</code> dari timestamp</td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border)">5</td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><b>Gambar</b></td><td style="padding:6px 8px;border-bottom:1px solid var(--border)"><code>node run.js images</code> (manual Google Flow + Zappy) &rarr; <code>04-gambar</code></td></tr>
+        <tr><td style="padding:6px 8px">6</td><td style="padding:6px 8px"><b>Rakit video</b></td><td style="padding:6px 8px"><code>node run.js assemble</code> &rarr; <code>05-video</code></td></tr>
+      </table>
+      <div class="note green" style="margin-top:12px"><b>Perintah:</b> semua dijalankan dari folder <code>agent</code>. Mulai dengan <code>node run.js status</code>, ganti suara via <code>node run.js voices</code> lalu set di <code>config.json</code>.</div>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tab-transcript">
+    <div class="transcript">
+      <h2>Transkrip Video (WVT2FCjhDDY)</h2>
+      <p class="t-info"><b>Judul:</b> Claude Code (Free Plan) + YouTube = $77,000/Month &mdash; ~12,5 menit. Transkrip mentah dari caption auto-generated YouTube.</p>
+      <pre id="transcript-text">[0:00] It's 2:00 a.m. at night. You can't
+[0:02] sleep. You're scrolling YouTube, thumb
+[0:04] moving automatically, not really looking
+[0:06] for anything. Um and then one thumbnail
+[0:09] stops you cold. A stick man, a simple
+[0:12] hand-drawn stick man, 7.5 million views.
+[0:16] Um you tap it. No fancy animation, no 3D
+[0:20] characters, no cinematic visuals,
+[0:24] not even video clips, just still images
+[0:26] of stick figures
+[0:27] one after another uh stitched together
+[0:30] into a full video. Um that's it. Static
+[0:33] images, stick figures with 7.5 million
+[0:37] views.
+[0:38] You go to the channel, 14 videos,
+[0:40] 137,000
+[0:42] subscribers,
+[0:43] 14.5 million total views,
+[0:46] uh with first video published just 2
+[0:48] months ago.
+[0:50] You sit up. One thought hits you.
+[0:52] If a stick man channel can do this in 2
+[0:55] months, I why can't I?
+[0:57] You open your laptop, you try to build
+[0:59] the workflow, but you hit a wall at the
+[1:02] very first step. You don't know how to
+[1:04] write a script that people actually want
+[1:06] to watch. And every AI tool that can
+[1:08] help requires a paid subscription.
+[1:11] You close the laptop. That stick man
+[1:13] channel just crossed another million
+[1:15] views while you're still at zero.
+[1:17] I know that feeling exactly cuz I was
+[1:19] sitting in the same place uh until I
+[1:21] built a complete free workflow that
+[1:23] creates these videos from script to
+[1:25] final upload. No paid tools, no design
+[1:28] skills, just a system that works. But
+[1:32] before we dive in, there's one thing you
+[1:34] need. A single prompt, not five tools,
+[1:36] [music] not a paid subscription, not a
+[1:39] complicated setup, just one prompt.
+[1:42] I spent weeks engineering and optimizing
+[1:44] this
+[1:46] specifically for this workflow. Uh it's
+[1:48] in the pinned comment below. Copy it and
+[1:51] now open Claude AI free plan. That's all
+[1:54] you need.
+[1:55] You can see I'm on the free plan right
+[1:56] now. Paste the prompt and and watch what
+[1:59] happens next.
+[2:01] The prompt loads.
+[2:03] And Claude doesn't just give you one
+[2:04] idea, it gives you five. Five viral
+[2:07] topic ideas.
+[2:09] Each one engineered to explode if you
+[2:11] follow this workflow completely. Pick
+[2:14] your number, hit send.
+[2:16] What comes back will surprise you. Not
+[2:18] just a script, a complete long-form
+[2:20] video script like anywhere from 5 to 15
+[2:23] minutes ready to
+[2:25] ready to use.
+[2:26] And it doesn't stop there. Claude
+[2:28] automatically creates a text file you
+[2:30] can download instantly. Here's the
+[2:32] download file. Now, before we move to
+[2:35] the next step,
+[2:37] I need to stop you.
+[2:38] Because what I'm about to tell you next
+[2:40] is the single most important thing in
+[2:41] this entire video.
+[2:43] Most creators follow this workflow,
+[2:46] write script, create text to image
+[2:48] prompt for each scenes,
+[2:50] generate scenes,
+[2:52] create voice-over, then try to sync
+[2:54] everything together.
+[2:56] Sounds logical, right? It's completely
+[2:58] wrong.
+[2:59] And if you've been following the same
+[3:01] workflow,
+[3:03] this is exactly why your videos aren't
+[3:05] exploding. Here's the problem.
+[3:07] When you generate scenes first and
+[3:09] create the voice-over second, you're
+[3:11] forcing two things together that were
+[3:13] never built for each other.
+[3:15] You're not creating rhythm, you're
+[3:17] creating a collision,
+[3:18] and viewers feel that collision even if
+[3:21] they can't explain why they clicked
+[3:22] away.
+[3:24] The correct workflow is the opposite.
+[3:26] Voice-over first, scene second, always.
+[3:29] Here's why.
+[3:30] Look at this voice-over. You can hear
+[3:32] the natural pauses between sentences.
+[3:35] That pause at 1 second 12 frames.
+[3:38] That's where scene one ends.
+[3:40] The next pause at 3 seconds 18 frames.
+[3:43] Scene two ends there. 6 seconds 7
+[3:46] frames, scene three.
+[3:48] 8 seconds 11 frames, scene four.
+[3:50] 12 seconds 16 frames, scene five.
+[3:54] Every scene is born from a pause.
+[3:56] Not forced, not guessed, not synced
+[3:59] after the fact. Built around the natural
+[4:01] rhythm of the voice, this is why that
+[4:04] stickman channel crossed 7.5 million
+[4:06] views with still images.
+[4:09] Not because of fancy tools, not because
+[4:11] of better graphics, because of rhythm.
+[4:14] And rhythm starts with the voiceover.
+[4:17] Get this right and everything else falls
+[4:20] into place. Now let's build the
+[4:21] voiceover. Copy your complete script.
+[4:25] Now visit 11labs free plan.
+[4:28] 10,000 credits every month. This That's
+[4:30] all you need.
+[4:31] Go to voices in the left sidebar. Search
+[4:34] for Raunak.
+[4:35] You'll see it. Viral, relatable, real
+[4:38] voice.
+[4:40] Add it to your library.
+[4:42] Now go to text-to-speech in the left
+[4:43] sidebar. Make sure Raunak is selected.
+[4:47] Paste your complete script. Hit
+[4:49] generate. Download the audio. Your
+[4:52] voiceover is ready.
+[4:53] Now comes the part that separates this
+[4:55] workflow from every other tutorial
+[4:57] you've watched. Remember, voiceover
+[5:00] first, scene second.
+[5:02] But how do you know exactly where each
+[5:03] scene should start and end?
+[5:06] That's where most creators guess.
+[5:08] You're not going to guess. Visit
+[5:09] faziscribe.ai.
+[5:11] Link is in the description. Sign up and
+[5:14] log in.
+[5:15] Free account gives you 10 minutes of AI
+[5:17] credit.
+[5:18] Once that runs out, create another free
+[5:20] account and keep going. Upload your
+[5:22] voiceover file. You'll see two modes,
+[5:25] fast and accuracy. Choose accuracy.
+[5:28] Every frame matters here.
+[5:30] Click transcribe audio and watch what it
+[5:33] does. It doesn't just transcribe your
+[5:34] words. It finds every pause in your
+[5:37] audio.
+[5:38] Every single one with exact timestamps.
+[5:41] Pause at two seconds, pause at four
+[5:43] seconds, pause at seven seconds.
+[5:46] Now you don't need to guess where scenes
+[5:48] begin and end.
+[5:49] The voice over tells you exactly.
+[5:52] One more thing, you may automatically
+[5:54] detect the language of your audio.
+[5:57] Hindi, English, Urdu,
+[5:59] any language, this workflow works for
+[6:02] all of them.
+[6:03] Now, download the timestamp script or
+[6:05] simply copy it. Go back to your Claude
+[6:08] AI conversation,
+[6:10] paste the full timestamp script, hit
+[6:12] send.
+[6:13] Claude now generates a detailed text to
+[6:15] image prompt for every single
+[6:17] timestamped line.
+[6:18] It won't give you everything at once. It
+[6:21] works in parts.
+[6:22] When the first batch is done, type next.
+[6:25] Keep going until every line has a
+[6:27] prompt. Um once all prompts are ready,
+[6:30] Claude will ask if you want a text file.
+[6:33] Type yes.
+[6:34] Uh within seconds,
+[6:36] a complete prompt file is ready to
+[6:38] download. Every scene, every timestamp,
+[6:41] every prompt
+[6:43] in one file.
+[6:44] Now, it's time to bring these prompts to
+[6:46] life. Uh
+[6:47] copy the prompt for scene one, visit
+[6:50] flow.google, create a new project. If
+[6:53] agent mode is already on, turn it off.
+[6:56] Select image mode. Set aspect ratio to
+[6:59] 16:9.
+[7:01] Set output per prompt to one. Select
+[7:04] Nano Banana 2 as your image model. This
+[7:07] model gives you the best results uh
+[7:09] without hitting generation limits. Paste
+[7:11] scene one prompt. Hit send. Within
+[7:14] seconds, scene one is ready. Uh you can
+[7:17] repeat this manually for every scene.
+[7:20] But, here's the truth.
+[7:22] With 100 plus scenes, that process will
+[7:25] take hours.
+[7:26] There's a faster way, a completely free
+[7:29] faster way.
+[7:30] Go to Google and search Zappy Flow
+[7:33] Chrome extension.
+[7:35] Open the first Chrome Web Store link.
+[7:37] You'll see the extension I personally
+[7:38] built for you. Completely free and free
+[7:41] forever. One thing, make sure the
+[7:44] developer name says zappywala.ai.
+[7:47] This protects you from fake or duplicate
+[7:49] versions.
+[7:50] Add it to Chrome, pin it, launch it.
+[7:53] Now, follow these steps carefully. Go to
+[7:56] Google Flow, open a new project, turn
+[7:59] agent mode off.
+[8:01] You'll see two messages in the extension
+[8:03] connected to Google Flow.
+[8:06] Agent mode off.
+[8:08] That means everything is ready. Uh now
+[8:10] set up the flow for bulk generation,
+[8:12] select image mode, set aspect ratio
+[8:16] 16:9,
+[8:17] set output per prompt one, set model to
+[8:21] nano banana two. Now, paste all your
+[8:24] prompts into the prompt box. One line
+[8:26] break between each prompt. This is
+[8:28] important. You can see we have have
+[8:31] prompts with one line break between
+[8:32] them. You can simply copy all the
+[8:34] prompts from here or simply upload the
+[8:37] prompt text file you downloaded earlier.
+[8:40] You can see 103 prompts loaded. One
+[8:43] setting before you run, toggle off
+[8:45] include serial number in file name. You
+[8:48] don't need this for our workflow. Set
+[8:50] your download folder. Click auto save
+[8:53] settings and make sure the first option
+[8:55] is turned off.
+[8:56] Go back to flow, adjust the random delay
+[8:59] if you want or leave it as it is. Now,
+[9:01] hit generate. Uh and this is where the
+[9:03] magic happens. The extension starts
+[9:06] generating every single image and
+[9:08] downloading them one by one
+[9:09] automatically.
+[9:11] And here's the best part, you don't have
+[9:13] to watch it. Switch tabs, open another
+[9:16] Chrome profile, minimize the window. It
+[9:19] keeps running in the background. No more
+[9:21] staring at a screen waiting.
+[9:23] Just keep one rule, do not close the
+[9:25] tab, the browser, or the extension.
+[9:28] Everything else,
+[9:30] you're free. Once complete, you'll see
+[9:33] the result. 103 prompts executed, 102
+[9:37] images generated successfully. One
+[9:40] failed, scene 15 at the 39-second
+[9:42] timestamp.
+[9:44] Don't worry, generate that one manually
+[9:46] using the same process. And just like
+[9:49] that,
+[9:50] all 103 scenes are ready.
+[9:52] Now comes the part that ties everything
+[9:54] together,
+[9:55] editing.
+[9:57] Open your favorite video editor,
+[9:59] import the voiceover file, drag it to
+[10:01] the timeline.
+[10:03] Now, import all your scene images, drag
+[10:05] them to the timeline in the correct
+[10:07] sequence. Here's how you sync them
+[10:09] perfectly.
+[10:10] Look at the file name of the next scene.
+[10:12] Uh it tells you the exact timestamp
+[10:14] where it starts.
+[10:16] Next scene starts at 4 seconds.
+[10:18] Move your playhead to exactly 4 seconds.
+[10:21] Trim from the right. Uh next scene
+[10:23] starts at 7 seconds.
+[10:25] Move playhead to 7 seconds. Trim again.
+[10:28] Sometimes you'll need to adjust the
+[10:30] playhead slightly.
+[10:31] That's normal. Take your time here. This
+[10:34] is the step that creates the rhythm.
+[10:36] This is what made that Stick Man channel
+[10:38] cross 7.5 million views.
+[10:41] Follow this process for every single
+[10:43] scene. Once done, do a full preview.
+[10:46] Watch it from the beginning, feel the
+[10:48] rhythm.
+[10:49] If it feels right, export the video.
+[10:52] You'll find the full video link in the
+[10:54] description.
+[10:55] Now it's time to make it go viral. Um
+[10:57] head back to Claude AI. You'll see it's
+[10:59] already asking, uh do you want to
+[11:01] generate metadata?
+[11:03] Type yes within seconds, uh a viral
+[11:06] title, viral description, and viral
+[11:08] tags.
+[11:09] All generated specifically for your
+[11:11] video.
+[11:12] But we still need one more thing, a
+[11:13] thumbnail that stops the scroll.
+[11:16] Type this prompt.
+[11:17] Ask for five high CTR thumbnail prompts
+[11:21] for your video with one line break
+[11:23] between each.
+[11:24] And ask Claude to provide them in a
+[11:26] copyable code block.
+[11:28] Copy all five prompts, go to the Zappy
+[11:31] extension, toggle it once, paste the
+[11:33] prompts, set your download folder, hit
+[11:36] generate. Five thumbnails, one click,
+[11:39] done.
+[11:40] Now go to your YouTube channel, upload
+[11:42] your video, use the viral metadata
+[11:45] Claude generated, pick your strongest
+[11:47] thumbnail,
+[11:48] publish. You just built a complete stick
+[11:51] man doodle video from a blank page to a
+[11:54] published YouTube video
+[11:56] using nothing but free AI tools.
+[11:58] No paid subscriptions,
+[12:00] no design skills, no team.
+[12:04] Just you, this workflow, and the system
+[12:06] that works.
+[12:07] If this helped you, hit the like button
+[12:09] and subscribe. Small creators like me
+[12:12] run on your support. All master prompts
+[12:15] and resources are in the description and
+[12:17] pinned comment. And if you want a
+[12:19] complete money printing YouTube
+[12:21] workflow, you cannot afford to miss the
+[12:24] video above. See you inside.
+</pre>
+    </div>
+  </div>
+
+  <p class="footer">Sumber: video &ldquo;Claude Code (Free Plan) + YouTube = $77,000/Month&rdquo; (WVT2FCjhDDY)</p>
+</div>
+
+<script>
+const COL = { p1:'var(--p1)', p2:'var(--p2)', p3:'var(--p3)', p4:'var(--p4)', p5:'var(--p5)' };
+
+const TOOLS = {
+  claude:{ name:'Claude AI',   url:'https://claude.ai',            c:'var(--p1)' },
+  eleven:{ name:'ElevenLabs',  url:'https://elevenlabs.io',        c:'var(--p2)' },
+  fazi:  { name:'Faziscribe',  url:'https://faziscribe.ai',        c:'var(--p2)' },
+  flow:  { name:'Google Flow', url:'https://flow.google.com',      c:'var(--p3)' },
+  zappy: { name:'Zappy Flow',  url:'https://chromewebstore.google.com/search/zappy%20flow', c:'var(--p3)' },
+  editor:{ name:'Editor Video',url:'https://www.capcut.com',       c:'var(--p4)' },
+  yt:    { name:'YouTube',     url:'https://studio.youtube.com',   c:'var(--p5)' },
+};
+
+const PHASES = [
+  { key:'p1', title:'SCRIPT', desc:'Topik & naskah', color:COL.p1, steps:[1,2] },
+  { key:'p2', title:'SUARA', desc:'Voice-over & jeda', color:COL.p2, steps:[3,4] },
+  { key:'p3', title:'GAMBAR', desc:'Prompt & scene', color:COL.p3, steps:[5,6,7] },
+  { key:'p4', title:'RAKIT', desc:'Edit, metadata, thumbnail', color:COL.p4, steps:[8,9,10] },
+  { key:'p5', title:'RILIS', desc:'Upload ke YouTube', color:COL.p5, steps:[11] },
+];
+
+const STEPS = [
+  { tool:'claude', est:'5 menit', result:'5 ide topik video',
+    title:'Paste master prompt ke Claude AI',
+    do:[
+      'Buka <b>claude.ai</b> di browser. Klik <b>Sign up / Log in</b> &rarr; pilih <b>Continue with Google</b> (pakai email Google kamu).',
+      'Pastikan kamu di paket <b>Free</b>: lihat kiri bawah layar, harus tertulis &ldquo;Claude &mdash; Free&rdquo;. Kalau muncul tawaran Pro/Plan, abaikan saja.',
+      'Salin <b>master prompt</b> (sudah kamu simpan di Persiapan Awal) dengan menekan <b>Ctrl+C</b>.',
+      'Tempel ke kotak chat Claude dengan <b>Ctrl+V</b>, lalu tekan <b>Enter</b> untuk mengirim.',
+      'Tunggu jawaban. Claude akan membalas dengan <b>5 ide topik viral</b> ber-format angka 1&ndash;5.',
+    ],
+    expect:'Kamu melihat 5 ide topik. Belum lanjut dulu &mdash; simpan master prompt di kotak di bawah agar tidak hilang (tersimpan otomatis).',
+    note:'Kalau Claude minta login lagi, login pakai akun Google yang sama. Master prompt dari komentar ter-pin video YouTube.',
+    acts:[{label:'Buka Claude AI',url:'https://claude.ai',go:true}],
+    ta:'Tempel master prompt di sini (untuk disimpan):' },
+
+  { tool:'claude', est:'10 menit', result:'File script video 5–15 menit',
+    title:'Claude menulis script video',
+    do:[
+      'Dari 5 ide tadi, pilih satu yang paling kamu suka. Ketik angka ide itu (misal: <b>2</b>) lalu tekan Enter.',
+      'Claude mulai menulis <b>script video panjang</b> (5&ndash;15 menit). Tunggu sampai selesai mengetik semua.',
+      'Gulir ke bawah, baca dulu scriptnya. Kalau ada bagian yang aneh, minta perbaiki: ketik <i>&ldquo;tolong perbaiki bagian intro&rdquo;</i>.',
+      'Download script sebagai file: di bawah jawaban Claude cari ikon <b>download / salin</b> (di pojok blok kode). Pilih <b>Download</b>.',
+      'Simpan file di folder <b>01-script</b>.',
+    ],
+    expect:'File script tersimpan di 01-script.',
+    note:'Ketik <i>&ldquo;lanjutkan&rdquo;</i> kalau Claude berhenti di tengah-tengah. Script yang baik berisi narasi per kalimat &mdash; ini yang nanti dipakai untuk voice-over.',
+    acts:[{label:'Buka Claude AI',url:'https://claude.ai',go:true}] },
+
+  { tool:'eleven', est:'15 menit', result:'File audio voice-over (mp3)',
+    title:'Generate voice-over di ElevenLabs',
+    do:[
+      'Buka <b>elevenlabs.io</b>. Daftar/login dengan <b>Continue with Google</b>. Paket <b>Free</b> memberi 10.000 kredit/bulan.',
+      'Di menu kiri klik <b>Voice Library</b>. Di kotak pencarian ketik <b>Raunak</b>.',
+      'Klik suara <b>Raunak</b> untuk dengar preview. Kalau cocok klik tombol <b>Add</b> / <b>Add to Library</b>.',
+      'Buka menu <b>Text to Speech</b> di kiri. Pastikan dropdown <b>Voice</b> (atas) terpilih <b>Raunak</b>.',
+      'Buka file script dari folder 01-script, salin semua isinya (<b>Ctrl+A</b> lalu <b>Ctrl+C</b>), tempel ke kotak teks besar (<b>Ctrl+V</b>).',
+      'Klik tombol <b>Generate</b> (ikon segitiga play). Tunggu proses selesai.',
+      'Setelah audio jadi, klik ikon <b>Download</b> untuk menyimpan file mp3. Simpan di folder <b>02-audio</b>, beri nama <b>voiceover.mp3</b>.',
+    ],
+    expect:'File voiceover.mp3 di folder 02-audio.',
+    note:'<b>Prinsip utama:</b> voice-over DULU, scene KEDUA. Kalau kredit menipis, cek sisa di halaman utama. Suara bisa diulang generate kalau kurang pas.',
+    acts:[{label:'Buka ElevenLabs',url:'https://elevenlabs.io',go:true}] },
+
+  { tool:'fazi', est:'10 menit', result:'File timestamp script',
+    title:'Deteksi jeda & timestamp di Faziscribe',
+    do:[
+      'Buka <b>faziscribe.ai</b>. Daftar atau login (paket gratis memberi <b>10 menit kredit</b> transkripsi).',
+      'Klik tombol <b>Upload</b>, pilih file <b>voiceover.mp3</b> dari folder 02-audio.',
+      'Saat muncul pilihan mode, pilih <b>Accuracy</b> (bukan Fast) &mdash; hasil jeda lebih teliti.',
+      'Klik tombol <b>Transcribe Audio</b>. Tunggu proses selesai (1&ndash;3 menit).',
+      'Hasilnya: transkrip voice-over lengkap dengan <b>waktu mulai setiap baris</b> (jeda).',
+      'Klik <b>Download timestamp script</b> (atau salin seluruh teksnya). Simpan di folder <b>03-prompt</b>.',
+    ],
+    expect:'File timestamp script tersimpan. Tiap jeda suara = titik akhir satu scene.',
+    note:'Kredit 10 menit habis? Buat akun Faziscribe baru dengan email lain, lanjutkan. Prinsip ini yang bikin sinkronisasi gambar ke suara jadi presisi.',
+    acts:[{label:'Buka Faziscribe',url:'https://faziscribe.ai',go:true}] },
+
+  { tool:'claude', est:'15 menit', result:'File prompt gambar per scene',
+    title:'Buat prompt gambar untuk tiap scene',
+    do:[
+      'Kembali ke <b>percakapan Claude</b> yang sama (yang tadi menulis script).',
+      'Buka file timestamp script, salin semua isinya, tempel ke chat Claude, tekan Enter.',
+      'Ketik perintah: <i>&ldquo;buatkan prompt text-to-image untuk setiap baris timestamp ini&rdquo;</i>, tekan Enter.',
+      'Claude menjawab dalam <b>beberapa bagian</b>. Setiap kali selesai, ketik <b>next</b> dan Enter &mdash; ulangi sampai semua baris punya prompt.',
+      'Setelah semua selesai, Claude akan bertanya apakah mau dibuatkan file teks. Ketik <b>yes</b>.',
+      'Klik <b>Download</b> file prompt-nya. Simpan di folder <b>03-prompt</b>.',
+    ],
+    expect:'File berisi: 1 baris = 1 prompt gambar untuk 1 scene.',
+    note:'Jangan tutup percakapan ini &mdash; masih dipakai lagi di langkah 9 (metadata) dan 10 (thumbnail).',
+    acts:[{label:'Buka Claude AI',url:'https://claude.ai',go:true}] },
+
+  { tool:'flow', est:'5 menit (tes)', result:'1 gambar uji coba',
+    title:'Generate scene uji coba di Google Flow',
+    do:[
+      'Buka <b>flow.google.com</b>. Login dengan akun Google (paket gratis).',
+      'Klik <b>New project</b> (atau ikon +) untuk membuat project baru.',
+      'Kalau mode <b>Agent</b> aktif, <b>matikan</b> (toggle Agent mode ke OFF).',
+      'Pilih mode <b>Image</b> (generate gambar).',
+      'Set <b>Aspect ratio</b> = <b>16:9</b> (ukuran video YouTube).',
+      'Set <b>Output per prompt</b> = <b>1</b>.',
+      'Pilih model <b>Nano Banana 2</b> (atau Gemini Image) dari dropdown model.',
+      'Buka file prompt scene 1 dari folder 03-prompt, salin prompt pertama, tempel ke kotak prompt di Google Flow.',
+      'Tekan Enter / klik Send. Tunggu gambar muncul.',
+    ],
+    expect:'1 gambar scene uji berhasil dibuat. Cek kualitasnya: kalau bagus, lanjut.',
+    note:'Ini hanya uji coba. Untuk 100+ scene jangan manual satu-satu &mdash; pakai Zappy Flow di langkah 7.',
+    acts:[{label:'Buka Google Flow',url:'https://flow.google.com',go:true}] },
+
+  { tool:'zappy', est:'20 menit', result:'100+ gambar scene ter-download otomatis',
+    title:'Generate massal dengan ekstensi Zappy Flow',
+    do:[
+      'Di Chrome, buka <b>Chrome Web Store</b> dan cari <b>Zappy Flow</b>.',
+      'Penting! Pastikan di halaman ekstensi tertulis <b>developer: zappywala.ai</b> &mdash; hindari ekstensi palsu dengan nama mirip.',
+      'Klik <b>Add to Chrome</b> &rarr; konfirmasi &rarr; ikon ekstensi muncul di kanan atas browser.',
+      'Pin ekstensinya: klik ikon puzzle &rarr; klik ikon pin pada Zappy Flow.',
+      'Buka <b>Google Flow</b> dan siapkan project persis seperti langkah 6: Agent mode OFF, mode Image, 16:9, output 1, Nano Banana 2.',
+      'Klik ikon <b>Zappy Flow</b>. Harus muncul dua pesan hijau: <i>Connected to Google Flow</i> dan <i>Agent mode off</i>.',
+      'Buka file prompt dari folder 03-prompt. Pastikan antar prompt dipisah <b>1 baris kosong</b>. Salin semua.',
+      'Di panel Zappy Flow, tempel semua prompt. Klik <b>toggle</b> untuk mengaktifkan.',
+      'Set <b>download folder</b> ke folder 04-gambar. <b>Matikan</b> opsi <i>include serial number in file name</i>.',
+      'Klik <b>Auto save settings</b>, pastikan opsi pertamanya <b>mati</b>.',
+      'Kembali ke Google Flow, lalu klik <b>Generate</b>. Ekstensi akan generate &amp; download semua gambar otomatis.',
+      '<b>Jangan tutup</b> tab, browser, atau ekstensi selama proses berjalan.',
+    ],
+    expect:'Muncul laporan, misal &ldquo;103 prompts executed, 102 images generated&rdquo;. Gambar tersimpan di 04-gambar.',
+    note:'Boleh pindah ke tab/Chrome profile lain, ekstensi tetap jalan di background. Ada scene yang gagal? Catat nomornya, generate manual pakai langkah 6.',
+    acts:[{label:'Cari Zappy Flow di Chrome Web Store',url:'https://chromewebstore.google.com/search/zappy%20flow',go:true}] },
+
+  { tool:'editor', est:'1–2 jam', result:'File video jadi (export)',
+    title:'Edit & sinkron di video editor',
+    do:[
+      'Buka video editor. Untuk pemula gunakan <b>CapCut</b> (gratis) &mdash; buka capcut.com &rarr; Create new project (rasio 16:9).',
+      'Import file <b>voiceover.mp3</b> dari 02-audio. Seret ke timeline (jalur bawah).',
+      'Import semua gambar dari folder <b>04-gambar</b>. Seret ke timeline <b>di atas</b> jalur audio, urut sesuai nomor scene.',
+      'Lihat <b>nama file scene pertama</b> &mdash; nama file berisi <b>timestamp mulai scene</b> (misal <i>4_seconds.png</i>).',
+      'Pindahkan playhead (garis merah di timeline) ke detik <b>4</b>.',
+      'Potong/trim scene pertama dari sisi kanan: seleksi gambar &rarr; tarik ujung kanan sampai playhead.',
+      'Lanjut ke scene berikutnya: baca nama file (misal <i>7_seconds.png</i>) &rarr; pindah playhead ke 7 detik &rarr; trim lagi. Ulangi sampai scene terakhir.',
+      'Kalau transisi terasa tidak pas, geser playhead sedikit maju/mundur. Ini wajar.',
+      'Setelah semua scene ter-trim, klik <b>preview</b> dari awal. Dengarkan + tonton. Rasakan ritmenya &mdash; tiap gambar berganti pas di jeda suara.',
+      'Kalau sudah pas, klik <b>Export</b> &rarr; pilih 1080p &rarr; format MP4 &rarr; simpan di folder <b>05-video</b>.',
+    ],
+    expect:'File video siap upload, sinkron sempurna dengan suara.',
+    note:'<b>Ini langkah paling penting</b> &mdash; sinkronisasi inilah rahasia channel stick man 7,5 juta views: setiap scene berganti tepat di jeda suara, bukan di tengah kalimat.',
+    acts:[{label:'Buka CapCut (editor gratis)',url:'https://www.capcut.com',go:true}] },
+
+  { tool:'claude', est:'5 menit', result:'Judul + deskripsi + tags viral',
+    title:'Minta metadata viral ke Claude',
+    do:[
+      'Kembali ke <b>percakapan Claude</b> yang sama (jangan buka percakapan baru).',
+      'Claude biasanya otomatis bertanya: <i>mau dibuatkan metadata?</i> Kalau iya, ketik <b>yes</b>.',
+      'Kalau tidak bertanya, ketik: <i>&ldquo;buatkan judul, deskripsi, dan tags viral untuk video ini&rdquo;</i>.',
+      'Salin hasilnya (judul, deskripsi, tags) &mdash; simpan sementara di Notepad. Ini dipakai saat upload.',
+    ],
+    expect:'Metada siap: 1 judul, 1 deskripsi, 1 set tags.',
+    note:'Judul &amp; deskripsi yang menarik perhatian (high CTR) biasanya dibuat mengikuti pola video viral serupa.',
+    acts:[{label:'Buka Claude AI',url:'https://claude.ai',go:true}] },
+
+  { tool:'zappy', est:'10 menit', result:'5 thumbnail siap pilih',
+    title:'Buat 5 thumbnail CTR tinggi',
+    do:[
+      'Di percakapan Claude yang sama, ketik perintah berikut: <i>&ldquo;berikan 5 prompt thumbnail CTR tinggi untuk video saya, satu baris kosong antar prompt, dalam code block&rdquo;</i>.',
+      'Claude akan memberi 5 prompt thumbnail. <b>Salin semua</b> (termasuk pemisah 1 baris kosong).',
+      'Buka ekstensi <b>Zappy Flow</b> &rarr; klik toggle sekali untuk mengaktifkan.',
+      'Tempel 5 prompt tadi &rarr; set folder download &rarr; klik Generate.',
+      'Tunggu 5 thumbnail jadi. Buka satu per satu, pilih yang paling menarik dan jelas dilihat ukuran kecil.',
+    ],
+    expect:'5 file thumbnail di folder download.',
+    note:'Thumbnail yang bagus: teks besar sedikit, kontras, wajah/objek jelas meski di ukuran kecil.',
+    acts:[{label:'Buka Zappy Flow',url:'https://chromewebstore.google.com/search/zappy%20flow',go:true}] },
+
+  { tool:'yt', est:'10 menit', result:'Video live di YouTube',
+    title:'Upload & publish ke YouTube',
+    do:[
+      'Buka <b>studio.youtube.com</b> &rarr; login dengan akun Google.',
+      'Klik tombol <b>Upload video</b> (kanan atas) &rarr; pilih file video dari folder 05-video.',
+      'Tunggu proses upload. Sambil menunggu, isi detail:',
+      '&nbsp;&nbsp;&bull; <b>Judul:</b> tempel judul dari metadata Claude (langkah 9).',
+      '&nbsp;&nbsp;&bull; <b>Deskripsi:</b> tempel deskripsi dari Claude.',
+      '&nbsp;&nbsp;&bull; <b>Tags:</b> tempel tags dari Claude.',
+      'Di bagian Thumbnail, klik <b>Upload thumbnail</b> &rarr; pilih thumbnail terbaik dari langkah 10.',
+      'Bagian lain (card, elemen akhir, dsb.) <b>boleh dilewati</b> untuk sekarang.',
+      'Di kanan atas pilih <b>Visibilitas: Publik</b>, lalu klik <b>Publish</b>.',
+    ],
+    expect:'Video tampil live di channel YouTube kamu.',
+    note:'Setelah publish, pantau komentar &amp; view count. Kalau performa bagus, buat video berikutnya dengan flow yang sama.',
+    acts:[{label:'Buka YouTube Studio',url:'https://studio.youtube.com',go:true}] },
+];
+
+const CONNECTIONS = [
+  { name:'Claude AI',    c:'var(--p1)', link:'https://claude.ai', desc:'Free plan. Script, prompt gambar, metadata, thumbnail.' },
+  { name:'ElevenLabs',   c:'var(--p2)', link:'https://elevenlabs.io', desc:'Free 10.000 kredit/bulan. Voice-over suara Raunak.' },
+  { name:'Faziscribe',   c:'var(--p2)', link:'https://faziscribe.ai', desc:'Transkrip audio + timestamp jeda.' },
+  { name:'Google Flow',  c:'var(--p3)', link:'https://flow.google.com', desc:'Generate gambar (Nano Banana 2, 16:9).' },
+  { name:'Zappy Flow',   c:'var(--p3)', link:'https://chromewebstore.google.com/search/zappy%20flow', desc:'Ekstensi Chrome (zappywala.ai). Bulk generate gambar.' },
+  { name:'CapCut',       c:'var(--p4)', link:'https://www.capcut.com', desc:'Editor video gratis &amp; mudah untuk pemula.' },
+  { name:'YouTube Studio',c:'var(--p5)', link:'https://studio.youtube.com', desc:'Upload & publish video.' },
+];
+
+const KEY = 'stickmanFlowState_v3';
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {done:{},prompts:{}}; }catch(e){ return {done:{},prompts:{}}; } },
+  set(s){ localStorage.setItem(KEY, JSON.stringify(s)); }
+};
+
+function switchTab(name){
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tabbtn-'+name).classList.add('active');
+}
+
+function buildRoadmap(){
+  const r = document.getElementById('roadmap');
+  const s = store.get();
+  r.innerHTML = PHASES.map((p,i)=>{
+    const n = p.steps.filter(x=>s.done[x]).length;
+    return '<div class="road" style="--bc:'+p.color+'" onclick="goPhase('+i+')">'+
+      '<div class="rn">Fase '+(i+1)+'</div>'+
+      '<div class="rt">'+p.title+'</div>'+
+      '<div class="rs">'+p.desc+'</div>'+
+      '<div class="rm">'+n+'/'+p.steps.length+' selesai</div></div>';
+  }).join('');
+}
+
+function buildFlow(){
+  const flow = document.getElementById('flow');
+  flow.innerHTML = '';
+  PHASES.forEach((p,pi)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'phase';
+    wrap.id = 'phase-'+pi;
+    wrap.style.setProperty('--bc', p.color);
+    wrap.innerHTML = '<div class="phase-head">'+
+      '<div class="phase-badge" style="background:'+p.color+'">'+(pi+1)+'</div>'+
+      '<div class="phase-title">Fase '+(pi+1)+': '+p.title+'<small>'+p.desc+'</small></div>'+
+      '<div class="phase-count" id="pc-'+pi+'"></div></div>'+
+      '<div class="steps" id="steps-'+pi+'"></div>';
+    flow.appendChild(wrap);
+    const holder = wrap.querySelector('#steps-'+pi);
+    p.steps.forEach((si,idx)=>{
+      const s = STEPS[si];
+      const t = TOOLS[s.tool];
+      const el = document.createElement('div');
+      el.className = 'step'; el.id = 'step-'+si;
+      const dolist = '<ol class="dolist">'+s.do.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
+      let acts = s.acts.map(a=>'<a'+(a.go?' class="go"':'')+' target="_blank" rel="noopener" href="'+a.url+'">'+a.label+'</a>').join('');
+      let ta = s.ta ? '<textarea id="ta-'+si+'" placeholder="'+s.ta+'"></textarea>' : '';
+      el.innerHTML = '<div class="s-num">'+si+'</div>'+
+        '<div class="s-top"><h3>'+si+'. '+s.title+' <span class="tool" style="color:'+t.c+'">'+t.name+'</span></h3>'+
+        '<span class="check" onclick="toggle('+si+')">&#10003;</span></div>'+
+        '<div class="s-body">'+
+        '<div class="meta"><span class="chip">Waktu: <b>'+s.est+'</b></span><span class="chip">Hasil: <b>'+s.result+'</b></span></div>'+
+        dolist+
+        '<div class="expect"><b>Hasil yang kamu lihat:</b> '+s.expect+'</div>'+
+        (s.note?'<div class="note'+(s.note.includes('Prinsip')||s.note.includes('paling penting')?' green':'')+'">'+s.note+'</div>':'')+
+        (acts?'<div class="acts">'+acts+'</div>':'')+ta+'</div>';
+      el.addEventListener('click',function(e){
+        if(e.target.closest('a')||e.target.closest('textarea')) return;
+        if(e.target.classList && e.target.classList.contains('check')) return;
+        el.classList.toggle('open');
+      });
+      holder.appendChild(el);
+      if(idx < p.steps.length-1) holder.appendChild(arrowEl(p.color));
+    });
+  });
+  const list = document.getElementById('connList');
+  list.innerHTML = CONNECTIONS.map(c=>'<div class="conn"><i class="c-dot" style="background:'+c.c+'"></i><b>'+c.name+'</b><span>'+c.desc+'</span><a target="_blank" rel="noopener" href="'+c.link+'">Buka</a></div>').join('');
+}
+
+function arrowEl(color){
+  const d = document.createElement('div');
+  d.className = 'arrow-down';
+  d.style.setProperty('--bc', color);
+  return d;
+}
+
+function goPhase(i){
+  document.getElementById('phase-'+i).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function toggle(i){
+  const s = store.get();
+  s.done[i] = !s.done[i];
+  store.set(s);
+  refresh();
+}
+
+function refresh(){
+  const s = store.get();
+  STEPS.forEach((_,i)=>{
+    const el = document.getElementById('step-'+i);
+    if(el) el.classList.toggle('done', !!s.done[i]);
+  });
+  PHASES.forEach((p,pi)=>{
+    const n = p.steps.filter(x=>s.done[x]).length;
+    const c = document.getElementById('pc-'+pi);
+    if(c) c.textContent = n+'/'+p.steps.length+' selesai';
+  });
+  const total = STEPS.length;
+  const n = Object.values(s.done).filter(Boolean).length;
+  const pct = Math.round(n/total*100);
+  document.getElementById('count').textContent = n+'/'+total;
+  document.getElementById('pct').textContent = pct+'%';
+  document.getElementById('fill').style.width = pct+'%';
+  buildRoadmap();
+}
+
+function resetAll(){
+  if(!confirm('Reset semua kemajuan?')) return;
+  store.set({done:{},prompts:store.get().prompts});
+  refresh();
+}
+
+function loadTextareas(){
+  const s = store.get();
+  STEPS.forEach((st,i)=>{
+    if(st.ta){
+      const el = document.getElementById('ta-'+i);
+      if(el){
+        el.value = s.prompts[i] || '';
+        el.addEventListener('input',function(){
+          const s2 = store.get();
+          s2.prompts[i] = el.value;
+          store.set(s2);
+        });
+      }
+    }
+  });
+}
+
+buildRoadmap(); buildFlow(); refresh(); loadTextareas();
+</script>
+</body>
+</html>
+

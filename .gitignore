@@ -1,0 +1,11 @@
+node_modules/
+01-script/
+02-audio/
+03-prompt/
+04-gambar/
+05-video/
+*.mp3
+*.mp4
+*.jpg
+*.png
+*.wav

@@ -1,0 +1,20 @@
+{
+  "voice": "en-IN-PrabhatNeural",
+  "rate": "+0%",
+  "pitch": "+0Hz",
+  "volume": "+0%",
+  "whisperModel": "Xenova/whisper-base.en",
+  "videoFps": 30,
+  "scenePadding": 0.3,
+  "folders": {
+    "script": "01-script",
+    "audio": "02-audio",
+    "prompt": "03-prompt",
+    "gambar": "04-gambar",
+    "video": "05-video"
+  },
+  "api": {
+    "geminiKey": "",
+    "geminiModel": "gemini-2.5-flash-image"
+  }
+}
