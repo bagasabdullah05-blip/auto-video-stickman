@@ -1,6 +1,6 @@
-# Flow Video Agent — Toolkit Video Stick Man (Gratis)
+# Flow Video Agent — Toolkit Video Otomatis (Gratis)
 
-Pipeline otomatis pembuatan video stick man doodle edukatif, mengikuti alur video
+Pipeline otomatis pembuatan video edukasi, mengikuti alur video
 tutorial populer. Semua komponen **gratis tanpa API key** (TTS, STT, rakit video).
 Gambar bisa dibuat manual (Google Flow + Zappy) atau via API Gemini (opsional).
 
@@ -64,7 +64,44 @@ node run.js stt --input <file> [--model <id>]
 node run.js images                      Mode manual (panduan Google Flow + Zappy)
 node run.js images --api --prompts <f>  Mode API Gemini [--key <k>] [--model <id>]
 node run.js assemble --audio <file> [--out <file>] [--engine <mesin>]
+node run.js describe [--script <f>] [--title <t>] [--channel <nama>]
+node run.js youtube auth
+node run.js youtube upload --video <f> [--privacy ...] [--publish-at "..."]
+node run.js youtube update --id <vid> [--title ...] [--publish-at "..."]
 ```
+
+## Deskripsi & upload YouTube
+
+7. **Deskripsi (copywriting)** — buat otomatis dari timestamp + script:
+   ```bash
+   node run.js describe
+   ```
+   Output: `05-video/description.txt` (hook + ringkasan + chapters
+   `0:00 ...` + hashtag) dan `05-video/upload-meta.json` (judul, tags,
+   kategori Edukasi) yang otomatis dipakai saat upload.
+8. **Konek YouTube** — sekali saja (atau lewat tab 1 aplikasi, ada panduannya):
+   1. `console.cloud.google.com` → buat Project baru.
+   2. API & Services → Library → **YouTube Data API v3** → Enable.
+   3. OAuth consent screen → External → isi App name + email → tambah
+      email sendiri di Test users.
+   4. Credentials → Create OAuth client ID → tipe **Desktop app**.
+   5. Simpan sebagai `agent/youtube-client.json`:
+      `{"client_id":"...","client_secret":"..."}`.
+   6. `node run.js youtube auth` → buka URL → Allow. Token tersimpan lokal.
+   7. Cek: `node run.js youtube doctor`. Multi-akun: tambah `--account nama`
+      di perintah auth/upload/update; daftar: `node run.js youtube accounts`.
+      Jika "unverified app": Advanced → Go to ... (aman, project sendiri).
+9. **Upload + jadwal tayang**:
+   ```bash
+   node run.js youtube upload --video 05-video/video.mp4 --privacy unlisted
+   node run.js youtube upload --video 05-video/video.mp4 --publish-at "2026-10-05T17:00:00+07:00"
+   ```
+   Judul/deskripsi/tags diambil dari `upload-meta.json` (hasil `describe`).
+   Jadwal (`publish-at`) otomatis memaksa status private sampai tayang.
+   Ubah metadata video yang sudah naik:
+   ```bash
+   node run.js youtube update --id VIDEO_ID --title "Judul baru" --privacy public
+   ```
 
 ## Mesin rakit video
 

@@ -62,9 +62,9 @@ function waitSaved(port, timeoutMs) {
   });
 }
 
-function startServer(port, outFile) {
+function startServer(port, outFile, dataDir) {
   const child = spawn('node', [path.join(TOOL, 'server.js')], {
-    env: { ...process.env, PORT: String(port), DATA_DIR: DATA, OUT_FILE: outFile },
+    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir || DATA, OUT_FILE: outFile },
     stdio: 'pipe'
   });
   return child;
@@ -79,12 +79,12 @@ function openBrowser(browser, port) {
   ], { stdio: 'pipe' });
 }
 
-async function assembleWebcodecs(audioFile, outFile) {
+async function assembleWebcodecs(audioFile, outFile, dataDir) {
   const browser = findBrowser();
   if (!browser) throw new Error('Tidak ada Edge/Chrome untuk mesin WebCodecs');
 
   const port = await getFreePort();
-  const server = startServer(port, outFile);
+  const server = startServer(port, outFile, dataDir);
   console.log('  mesin: WebCodecs (headless ' + path.basename(browser) + ')\n  port: ' + port);
 
   try {
@@ -103,4 +103,8 @@ async function assembleWebcodecs(audioFile, outFile) {
   }
 }
 
-module.exports = { assembleWebcodecs };
+function hasBrowser() {
+  return !!findBrowser();
+}
+
+module.exports = { assembleWebcodecs, findBrowser, hasBrowser };

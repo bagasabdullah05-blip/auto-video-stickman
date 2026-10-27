@@ -33,7 +33,7 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto Video Stickman — Dashboard</title>
+<title>Viral Video Studio — Dashboard</title>
 <style>
 :root{--bg:#0c0e14;--card:#151824;--border:#252b3d;--text:#e9ebf2;--muted:#9aa2b5;--blue:#4f8cff;--green:#3ddc84;--orange:#ffa24c;--red:#ff6b6b;--purple:#b07bff;--cyan:#35e0c8}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -82,7 +82,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 <body>
 <div class="topbar">
   <div class="status-dot"></div>
-  <h1>&#9641; Auto Video Stickman — Dashboard</h1>
+  <h1>&#9641; Viral Video Studio — Dashboard</h1>
 </div>
 <div class="wrap">
   <div class="status-bar" id="statusBar"></div>
@@ -161,6 +161,61 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   </div>
 </div>
 
+<div class="modal-overlay" id="modalZip">
+  <div class="modal" style="max-width:600px">
+    <h3>&#128230; Upload Paket Viral (ZIP)</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">ZIP berisi <b style="color:var(--text)">NNN_image_*.png + NNN_voice_*.wav</b> per scene (hasil dari Gemini / Buat Materi).</p>
+    <input type="file" id="zipFile" accept=".zip" style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px">
+    <div id="zipProgress" style="display:none;margin-top:10px;background:#10131d;border-radius:8px;overflow:hidden"><div id="zipBar" style="height:10px;width:0%;background:var(--orange)"></div></div>
+    <div id="zipInfo" style="display:none;margin-top:12px;font-size:12px;color:var(--muted);line-height:1.8"></div>
+    <div id="zipResult" style="display:none;margin-top:12px"></div>
+    <div class="btn-row">
+      <button class="btn btn-orange" onclick="closeModal('modalZip')">Tutup</button>
+      <button class="btn btn-green" id="btnRakit" onclick="runViral()" style="display:none">Rakit Video (WebCodecs)</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalYT">
+  <div class="modal" style="max-width:600px">
+    <h3>&#9654; Setting Akun YouTube</h3>
+    <div id="ytStatusBox" style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7">Memeriksa status...</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">CLIENT ID (dari Google Cloud Console &rarr; OAuth Desktop app)</div>
+    <input id="ytClientId" placeholder="xxx.apps.googleusercontent.com" style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">CLIENT SECRET</div>
+    <input id="ytClientSecret" placeholder="GOCSPX-..." style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">
+    <div id="ytAuthBox" style="display:none;margin-top:10px;font-size:12px;line-height:1.7"></div>
+    <div class="btn-row">
+      <button class="btn btn-orange" onclick="closeModal('modalYT')">Tutup</button>
+      <button class="btn btn-blue" onclick="saveYTClient()">Simpan</button>
+      <button class="btn btn-red" onclick="ytAuthStart()">Hubungkan Akun</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPublish">
+  <div class="modal" style="max-width:650px">
+    <h3>&#128228; Deskripsi &amp; Upload YouTube</h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">VIDEO</div>
+    <input id="pubVideo" readonly style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">JUDUL</div>
+    <input id="pubTitle" style="width:100%;background:#10131d;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DESKRIPSI (otomatis dari timestamp &mdash; boleh diedit)</div>
+    <textarea id="pubDesc" style="min-height:140px"></textarea>
+    <div class="input-row">
+      <select id="pubPrivacy"><option value="unlisted">Unlisted (tidak publik)</option><option value="private">Private</option><option value="public">Public</option></select>
+      <input id="pubAt" type="datetime-local" title="Jadwal tayang (opsional)">
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px">Jadwal tayang otomatis memaksa status private sampai waktunya tiba.</p>
+    <div id="pubResult" style="display:none;margin-top:10px;font-size:12px"></div>
+    <div class="btn-row">
+      <button class="btn btn-orange" onclick="closeModal('modalPublish')">Tutup</button>
+      <button class="btn btn-cyan" onclick="runDescribeStage()">1. Buat Deskripsi</button>
+      <button class="btn btn-red" onclick="ytUpload()">2. Upload</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const CARDS = [
   { icon:'1', color:'var(--blue)', title:'Script', sub:'Tulis narasi', id:'script',
@@ -184,6 +239,15 @@ const CARDS = [
   { icon:'7', color:'var(--cyan)', title:'Metadata YouTube', sub:'Judul + Deskripsi + Tags', id:'metadata',
     desc:'<b>Langkah 7:</b> Generate judul viral, deskripsi, dan tags SEO dari script.',
     actions:[{label:'Generate Metadata',cls:'btn-cyan',fn:'openModalMetadata()'},{label:'Lihat Folder',cls:'btn-orange',fn:'openFolder("05-video")'}]},
+  { icon:'&#128230;', color:'var(--orange)', title:'Paket Viral (ZIP)', sub:'Upload &rarr; Rakit', id:'zip',
+    desc:'<b>Mode cepat:</b> upload ZIP aset (image + voice per scene) lalu rakit via WebCodecs dalam hitungan detik.',
+    actions:[{label:'Upload ZIP',cls:'btn-orange',fn:'openModalZip()'},{label:'Lihat Hasil',cls:'btn-green',fn:'openFolder("05-video")'}]},
+  { icon:'&#9654;', color:'var(--red)', title:'YouTube', sub:'Konek + Upload + Jadwal', id:'yt',
+    desc:'<b>Posting otomatis:</b> hubungkan akun, upload video, set deskripsi & jadwal tayang.',
+    actions:[{label:'Setting Akun',cls:'btn-red',fn:'openModalYT()'},{label:'Cek Status',cls:'btn-blue',fn:'ytStatus()'}]},
+  { icon:'&#10024;', color:'var(--purple)', title:'Buat Materi', sub:'Script + Gambar + Suara', id:'materi',
+    desc:'<b>Langkah 0:</b> buat paket materi (script, image, voice) di Gemini, unduh ZIP-nya lalu upload di kartu Paket Viral.',
+    actions:[{label:'Buka Gemini',cls:'btn-purple',fn:'openMateri()'}]},
 ];
 
 let currentLog = '';
@@ -419,6 +483,167 @@ async function runAssemble() {
 
 function openFolder(name) { fetch('/api/open-folder/' + name); log('[~] Membuka folder ' + name + '...', 'info'); }
 
+const MATERI_URL = 'https://share.gemini.google/ygcOmHjXk8lR';
+function openMateri() { window.open(MATERI_URL, '_blank'); log('[~] Membuka Gemini pembuat materi di tab baru.', 'info'); log('Buat paket di Gemini, unduh ZIP-nya, lalu upload via kartu Paket Viral.', 'warn'); }
+
+let currentPack = '';
+let currentStage = '';
+
+function openModalZip() {
+  document.getElementById('zipFile').value = '';
+  document.getElementById('zipProgress').style.display = 'none';
+  document.getElementById('zipBar').style.width = '0%';
+  document.getElementById('zipInfo').style.display = 'none';
+  document.getElementById('zipResult').style.display = 'none';
+  document.getElementById('btnRakit').style.display = 'none';
+  currentPack = '';
+  openModal('modalZip');
+}
+
+async function uploadZip() {
+  const inp = document.getElementById('zipFile');
+  if (!inp.files.length) return;
+  const fd = new FormData();
+  fd.append('zip', inp.files[0]);
+  document.getElementById('zipProgress').style.display = 'block';
+  document.getElementById('zipInfo').style.display = 'none';
+  document.getElementById('zipResult').style.display = 'none';
+  log('[~] Mengupload ' + inp.files[0].name + '...', 'info');
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload-zip');
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable) document.getElementById('zipBar').style.width = Math.round(e.loaded / e.total * 100) + '%';
+  };
+  xhr.onload = () => {
+    let d = {};
+    try { d = JSON.parse(xhr.responseText); } catch (e) { d = { ok: false, error: 'Respon server tidak valid.' }; }
+    if (!d.ok) { log('[!] Upload gagal: ' + d.error, 'err'); return; }
+    currentPack = d.pack;
+    document.getElementById('zipBar').style.width = '100%';
+    const box = document.getElementById('zipInfo');
+    box.style.display = 'block';
+    box.innerHTML = 'Topik: <b>' + d.topic + '</b><br>Scene: <b>' + d.scenes + '</b> &nbsp; Estimasi: <b>' + d.durasi + '</b>';
+    document.getElementById('btnRakit').style.display = '';
+    log('[OK] Paket siap: ' + d.scenes + ' scene (' + d.durasi + ')', 'ok');
+  };
+  xhr.onerror = () => log('[!] Upload gagal (koneksi).', 'err');
+  xhr.send(fd);
+}
+document.addEventListener('change', e => { if (e.target && e.target.id === 'zipFile') uploadZip(); });
+
+async function pollJob(id, done) {
+  const d = await (await fetch('/api/job/' + id)).json();
+  if (d.running) { setTimeout(() => pollJob(id, done), 2000); return; }
+  done(d);
+}
+
+async function runViral() {
+  if (!currentPack) { alert('Upload ZIP dulu.'); return; }
+  const btn = document.getElementById('btnRakit');
+  btn.disabled = true;
+  clearLog(); log('[~] Merakit video via WebCodecs...', 'info');
+  const r = await (await fetch('/api/run-viral', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pack: currentPack }) })).json();
+  if (!r.ok) { log('[!] Gagal: ' + r.error, 'err'); btn.disabled = false; return; }
+  log('[~] Job ' + r.id + ' berjalan. Menunggu selesai...', 'warn');
+  pollJob(r.id, d => {
+    btn.disabled = false;
+    log(d.log, '');
+    if (d.code === 0) {
+      log('[OK] Video jadi: ' + d.video, 'ok');
+      const box = document.getElementById('zipResult');
+      box.style.display = 'block';
+      box.innerHTML = '<div style="font-size:12px;color:var(--green);margin-bottom:8px"><b>Video selesai!</b> ' + d.video + ' (' + d.scenes + ' scene)</div>' +
+        '<button class="btn btn-cyan" onclick="openPublish(\\'' + d.video.replace(/\\/g, '\\\\') + '\\',\\'' + d.stage.replace(/\\/g, '\\\\') + '\\')">Deskripsi &amp; Upload</button> ' +
+        '<button class="btn btn-blue" onclick="window.open(\\'/video/' + d.videoFile + '\\',\\'_blank\\')">Putar / Unduh</button>';
+    } else {
+      log('[!] Rakit gagal (kode ' + d.code + ').', 'err');
+    }
+    refreshStatus();
+  });
+}
+
+function openPublish(video, stage) {
+  document.getElementById('pubVideo').value = video;
+  document.getElementById('pubTitle').value = '';
+  document.getElementById('pubDesc').value = '';
+  document.getElementById('pubResult').style.display = 'none';
+  currentStage = stage;
+  closeModal('modalZip');
+  openModal('modalPublish');
+}
+
+async function runDescribeStage() {
+  clearLog(); log('[~] Membuat deskripsi dari timestamp...', 'info');
+  const r = await (await fetch('/api/run-describe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ stage: currentStage }) })).json();
+  if (!r.ok) { log('[!] Gagal: ' + r.error, 'err'); return; }
+  document.getElementById('pubDesc').value = r.description;
+  document.getElementById('pubTitle').value = r.title;
+  log('[OK] Deskripsi + chapters dibuat dari ' + r.scenes + ' timestamp.', 'ok');
+}
+
+async function ytUpload() {
+  const video = document.getElementById('pubVideo').value;
+  const title = document.getElementById('pubTitle').value.trim();
+  const description = document.getElementById('pubDesc').value;
+  const privacy = document.getElementById('pubPrivacy').value;
+  const at = document.getElementById('pubAt').value;
+  if (!video || !title) { alert('Video dan judul harus diisi (buat deskripsi dulu).'); return; }
+  clearLog(); log('[~] Mengupload ke YouTube...', 'info');
+  const r = await (await fetch('/api/yt-upload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ video, title, description, privacy, publishAt: at }) })).json();
+  if (!r.ok) { log('[!] Gagal: ' + r.error, 'err'); return; }
+  log('[~] Job ' + r.id + ' berjalan...', 'warn');
+  pollJob(r.id, d => {
+    log(d.log, '');
+    const box = document.getElementById('pubResult');
+    box.style.display = 'block';
+    box.innerHTML = d.code === 0 ? '<span style="color:var(--green)"><b>Berhasil tayang!</b> ' + d.url + '</span>' : '<span style="color:var(--red)">Upload gagal (kode ' + d.code + ').</span>';
+  });
+}
+
+async function openModalYT() {
+  document.getElementById('ytAuthBox').style.display = 'none';
+  openModal('modalYT');
+  await ytStatus();
+}
+
+async function ytStatus() {
+  const box = document.getElementById('ytStatusBox');
+  if (box) box.textContent = 'Memeriksa status...';
+  const d = await (await fetch('/api/yt-status')).json();
+  const html = 'Client ID: <b>' + (d.hasClient ? 'terpasang' : 'belum ada') + '</b><br>Akun: <b>' + (d.connected ? d.channel : 'belum terhubung') + '</b>';
+  if (box) box.innerHTML = html;
+  log('[~] YouTube: client=' + (d.hasClient ? 'OK' : '-') + ', akun=' + (d.connected ? d.channel : '-'), 'info');
+}
+
+async function saveYTClient() {
+  const client_id = document.getElementById('ytClientId').value.trim();
+  const client_secret = document.getElementById('ytClientSecret').value.trim();
+  if (!client_id || !client_secret) { alert('Client ID dan Secret harus diisi.'); return; }
+  const r = await (await fetch('/api/yt-client', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ client_id, client_secret }) })).json();
+  if (r.ok) { log('[OK] Client tersimpan.', 'ok'); ytStatus(); }
+  else log('[!] Gagal: ' + r.error, 'err');
+}
+
+async function ytAuthStart() {
+  const box = document.getElementById('ytAuthBox');
+  box.style.display = 'block';
+  box.innerHTML = 'Meminta URL login...';
+  const r = await (await fetch('/api/yt-auth-start', { method:'POST' })).json();
+  if (!r.ok) { box.innerHTML = 'Gagal: ' + r.error; return; }
+  const check = async () => {
+    const s = await (await fetch('/api/yt-auth-start')).json();
+    if (s.url) {
+      box.innerHTML = '1. Buka link ini di browser:<br><a href="' + s.url + '" target="_blank" style="color:var(--cyan);word-break:break-all">' + s.url + '</a><br>2. Login &amp; klik Allow, lalu tunggu status berubah.';
+      const poll = setInterval(async () => {
+        const st = await (await fetch('/api/yt-status')).json();
+        if (st.connected) { clearInterval(poll); box.innerHTML = 'Terhubung: <b>' + st.channel + '</b>'; ytStatus(); }
+      }, 3000);
+    } else if (!s.done) setTimeout(check, 1500);
+    else box.innerHTML = 'Gagal: ' + (s.error || 'tidak diketahui');
+  };
+  check();
+}
+
 async function refreshStatus() {
   const d = await api('/api/status');
   renderStatus(d);
@@ -429,6 +654,89 @@ refreshStatus();
 </script>
 </body>
 </html>`;
+
+const jobs = {};
+let jobSeq = 0;
+let authState = { url: '', done: false, error: '' };
+
+function startJob(label, cmd, args) {
+  const id = 'job' + (++jobSeq) + '_' + Date.now();
+  const proc = spawn(cmd, args, { cwd: __dirname });
+  const j = { label, running: true, code: null, log: '', video: '', stage: '', videoFile: '', scenes: 0 };
+  jobs[id] = j;
+  proc.stdout.on('data', d => { j.log += d.toString(); });
+  proc.stderr.on('data', d => { j.log += d.toString(); });
+  proc.on('close', code => { j.running = false; j.code = code; });
+  proc.on('error', e => { j.running = false; j.code = 1; j.log += 'ERROR: ' + e.message; });
+  return id;
+}
+
+function readJson(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => { try { resolve(JSON.parse(body || '{}')); } catch { resolve({}); } });
+  });
+}
+
+function execv(cmd, args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(cmd, args);
+    let err = '';
+    p.stderr.on('data', d => err += d.toString());
+    p.on('close', code => code === 0 ? resolve(true) : reject(new Error(err.slice(-400) || ('kode ' + code))));
+    p.on('error', e => reject(e));
+  });
+}
+
+function saveMultipart(req, destDir) {
+  return new Promise((resolve, reject) => {
+    const m = (req.headers['content-type'] || '').match(/boundary=([^;]+)/);
+    if (!m) return reject(new Error('Bukan form multipart.'));
+    const boundary = Buffer.from('--' + m[1].trim());
+    const keep = boundary.length + 8;
+    let buf = Buffer.alloc(0);
+    let phase = 0;
+    let out = null;
+    let filename = 'upload.zip';
+    let filepath = '';
+    req.on('data', c => {
+      buf = Buffer.concat([buf, c]);
+      if (phase === 0) {
+        const hi = buf.indexOf(Buffer.from('\r\n\r\n'));
+        if (hi === -1) return;
+        const fm = buf.slice(0, hi).toString('utf8').match(/filename="([^"]+)"/);
+        if (fm) filename = fm[1].split(/[\\/]/).pop() || filename;
+        fs.mkdirSync(destDir, { recursive: true });
+        filepath = path.join(destDir, filename);
+        out = fs.createWriteStream(filepath);
+        buf = buf.slice(hi + 4);
+        phase = 1;
+      }
+      if (phase === 1 && buf.length > keep) {
+        out.write(buf.slice(0, buf.length - keep));
+        buf = buf.slice(buf.length - keep);
+      }
+    });
+    req.on('end', () => {
+      if (phase !== 1) return reject(new Error('Upload kosong.'));
+      const idx = buf.indexOf(boundary);
+      const end = idx === -1 ? buf.length : idx - 2;
+      if (end > 0) out.write(buf.slice(0, end));
+      out.end(() => resolve({ filename, filepath }));
+    });
+    req.on('error', reject);
+  });
+}
+
+function freeServerOut(out) {
+  if (!fs.existsSync(out)) return out;
+  const ext = path.extname(out);
+  const base = out.slice(0, -ext.length);
+  let i = 2;
+  while (fs.existsSync(base + '_' + i + ext)) i++;
+  return base + '_' + i + ext;
+}
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -564,6 +872,170 @@ const server = http.createServer(async (req, res) => {
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
+  if (url.pathname === '/api/upload-zip' && req.method === 'POST') {
+    try {
+      const upDir = path.join(__dirname, '06-viral', '_uploads');
+      const { filename, filepath } = await saveMultipart(req, upDir);
+      const base = path.basename(filename, '.zip');
+      const packDir = path.join(__dirname, '06-viral', '_pack', base);
+      await execv('powershell', ['-NoProfile', '-Command', 'Expand-Archive -LiteralPath "' + filepath + '" -DestinationPath "' + packDir + '" -Force']);
+      const { viralInfo, packTopic } = require('./lib/viral');
+      const info = viralInfo(packDir);
+      if (!info.scenes) throw new Error('ZIP tidak berisi pasangan NNN_image_* + NNN_voice_*.');
+      const secs = info.estSec;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, pack: packDir, topic: packTopic(packDir), scenes: info.scenes, durasi: Math.floor(secs / 60) + ' mnt ' + (secs % 60) + ' dtk' }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/run-viral' && req.method === 'POST') {
+    const body = await readJson(req);
+    try {
+      if (!body.pack) throw new Error('Pack belum diupload.');
+      const base = path.basename(body.pack);
+      const out = freeServerOut(path.join(dir('video'), base + '.mp4'));
+      const id = startJob('viral', 'node', ['run.js', 'viral', '--dir', body.pack, '--out', out]);
+      jobs[id].video = out;
+      jobs[id].stage = path.join(__dirname, '06-viral', base);
+      jobs[id].videoFile = path.basename(out);
+      const { viralInfo } = require('./lib/viral');
+      jobs[id].scenes = viralInfo(body.pack).scenes;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, id }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/job/')) {
+    const id = url.pathname.split('/').pop();
+    const j = jobs[id];
+    if (!j) { res.writeHead(404); res.end('Not found'); return; }
+    let outUrl = '';
+    if (!j.running && j.code === 0 && j.label === 'youtube-upload') {
+      const m = j.log.match(/youtube\.com\/watch\?v=[\w-]+/);
+      if (m) outUrl = 'https://' + m[0];
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ running: j.running, code: j.code, log: j.log.slice(-6000), video: j.video || '', stage: j.stage || '', videoFile: j.videoFile || '', scenes: j.scenes || 0, url: outUrl }));
+    return;
+  }
+
+  if (url.pathname === '/api/yt-status') {
+    const hasClient = fs.existsSync(path.join(__dirname, 'youtube-client.json'));
+    const connected = fs.existsSync(path.join(__dirname, '.youtube-token.json'));
+    let channel = '';
+    for (const j of Object.values(jobs)) {
+      const m = j.log.match(/Channel:\s*(.+?)\s*\(/);
+      if (m) channel = m[1];
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ hasClient, connected, channel: channel || (connected ? 'terhubung' : '') }));
+    return;
+  }
+
+  if (url.pathname === '/api/yt-client' && req.method === 'POST') {
+    const body = await readJson(req);
+    try {
+      if (!body.client_id || !body.client_secret) throw new Error('Client ID dan Secret wajib diisi.');
+      fs.writeFileSync(path.join(__dirname, 'youtube-client.json'), JSON.stringify({ client_id: body.client_id, client_secret: body.client_secret }, null, 2));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/yt-auth-start' && req.method === 'POST') {
+    try {
+      if (!fs.existsSync(path.join(__dirname, 'youtube-client.json'))) throw new Error('Simpan Client ID/Secret dulu.');
+      authState = { url: '', done: false, error: '' };
+      const proc = spawn('node', ['run.js', 'youtube', 'auth'], { cwd: __dirname });
+      let out = '';
+      proc.stdout.on('data', d => {
+        out += d.toString();
+        const m = out.match(/https?:\/\/[^\s'"]+/);
+        if (m) authState.url = m[0];
+      });
+      proc.stderr.on('data', d => { out += d.toString(); });
+      proc.on('close', code => {
+        authState.done = true;
+        if (code !== 0) authState.error = out.slice(-500);
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/yt-auth-start' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ url: authState.url, done: authState.done, error: authState.error }));
+    return;
+  }
+
+  if (url.pathname === '/api/run-describe' && req.method === 'POST') {
+    const body = await readJson(req);
+    try {
+      if (!body.stage) throw new Error('Stage tidak dikenal.');
+      const { describe } = require('./lib/describe');
+      const scriptDir = path.join(body.stage, '01-script');
+      const scriptFiles = fs.readdirSync(scriptDir).filter(f => f.endsWith('.txt'));
+      if (!scriptFiles.length) throw new Error('Script tidak ada di stage.');
+      const out = path.join(body.stage, '05-video', 'description.txt');
+      describe(path.join(scriptDir, scriptFiles[0]), out, {
+        stamp: path.join(body.stage, '03-prompt', 'timestamp.txt'),
+        cut: path.join(body.stage, '03-prompt', 'cutpoints.json')
+      });
+      const meta = JSON.parse(fs.readFileSync(path.join(body.stage, '05-video', 'upload-meta.json'), 'utf8'));
+      const stamps = fs.readFileSync(path.join(body.stage, '03-prompt', 'timestamp.txt'), 'utf8').split('\n').filter(Boolean).length;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, title: meta.title, description: meta.description, scenes: stamps }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/yt-upload' && req.method === 'POST') {
+    const body = await readJson(req);
+    try {
+      if (!body.video || !body.title) throw new Error('Video dan judul wajib diisi.');
+      const args = ['run.js', 'youtube', 'upload', '--video', body.video, '--title', body.title, '--privacy', body.privacy || 'unlisted'];
+      if (body.description) args.push('--description', body.description);
+      if (body.publishAt) args.push('--publish-at', new Date(body.publishAt).toISOString());
+      const id = startJob('youtube-upload', 'node', args);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, id }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
+
+  if (url.pathname.startsWith('/video/')) {
+    const name = path.basename(url.pathname.slice('/video/'.length));
+    const file = path.join(dir('video'), name);
+    if (!name.toLowerCase().endsWith('.mp4') || !fs.existsSync(file)) { res.writeHead(404); res.end('Not found'); return; }
+    const stat = fs.statSync(file);
+    res.writeHead(200, { 'Content-Type': 'video/mp4', 'Content-Length': stat.size, 'Content-Disposition': 'attachment; filename="' + name + '"' });
+    fs.createReadStream(file).pipe(res);
     return;
   }
 

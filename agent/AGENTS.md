@@ -1,6 +1,6 @@
-# AGENTS.md — Flow Video Stick Man (agent otomatis)
+# AGENTS.md — Flow Video Agent (otomatis)
 
-Sistem di folder ini: pipeline pembuatan video stick man doodle edukatif, semuanya
+Sistem di folder ini: pipeline pembuatan video edukasi, semuanya
 GRATIS. Agent opencode berperan menggantikan "Claude" di alur video tutorial
 (WVT2FCjhDDY), dan menjalankan tool lokal untuk suara, timestamp, dan rakit video.
 
@@ -32,6 +32,14 @@ GRATIS. Agent opencode berperan menggantikan "Claude" di alur video tutorial
    (`--engine webcodecs`): render OffscreenCanvas di Web Worker + VideoEncoder/
    AudioEncoder HW di headless Edge, sangat cepat (ratusan x real-time).
    Fallback ffmpeg: `--engine ffmpeg`. Log proses: `05-video/webcodecs.log`.
+7. **DESKRIPSI** — `node run.js describe` membuat `05-video/description.txt`
+   (hook + ringkasan + chapters dari timestamp + hashtag) dan
+   `05-video/upload-meta.json` (judul, tags, kategori Edukasi).
+8. **YOUTUBE** — butuh `youtube-client.json` (OAuth Desktop app) + `node run.js
+   youtube auth` sekali. Upload: `node run.js youtube upload --video
+   05-video/video.mp4 [--privacy ...] [--publish-at "..."]`. Ubah metadata:
+   `node run.js youtube update --id VIDEO_ID [...]`. Jadwal otomatis memaksa
+   status private sampai waktu tayang.
 
 ## Perintah tool
 

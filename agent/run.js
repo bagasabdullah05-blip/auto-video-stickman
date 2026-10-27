@@ -4,7 +4,7 @@ const { cfg, dir, argValue, hasFlag } = require('./lib/fsutil');
 const { listAll } = require('./lib/voices');
 
 const USAGE = `
-Pipeline video stick man - toolkit otomatis (gratis)
+Viral Video Studio - toolkit video otomatis (gratis)
 
 PENGGUNAAN:
   node run.js <perintah> [opsi]
@@ -23,9 +23,33 @@ PERINTAH:
           [--key <key>]       Bisa langsung lewat CLI
           [--model <id>]      Model gambar (default dari config)
   assemble --audio <file>     Rakit video: gambar(04) + audio + cutpoints
-          [--out <file>]      File output (default 05-video/video.mp4)
-          [--engine <mesin>]  Mesin rakit: webcodecs (default, cepat, HW encoder)
-                              | ffmpeg (CPU)
+           [--out <file>]      File output (default 05-video/video.mp4)
+           [--engine <mesin>]  Mesin rakit: webcodecs (default, cepat, HW encoder)
+                               | ffmpeg (CPU)
+  describe [--script <file>]  Buat deskripsi + chapters YouTube dari timestamp
+           [--out <file>]      -> 05-video/description.txt + upload-meta.json
+           [--title <judul>]   [--channel <nama>]
+           [--stamp <file>]    [--cut <file>]  Timestamp/cutpoints kustom
+           [--title-file <f>]  [--desc-file <f>]  Judul/deskripsi dari file
+  viral --dir <folder>        Rakit paket viral (NNN_image_* + NNN_voice_*)
+           [--out <file>]      File output (default 05-video/<nama-paket>.mp4)
+           [--limit <n>]       Coba N scene pertama saja
+           [--engine <mesin>]  Mesin rakit: webcodecs (default, detik) | ffmpeg
+           [--info]            Tampilkan info paket tanpa merakit
+  youtube accounts            Daftar akun YouTube (login/keluar)
+  youtube doctor              Cek koneksi akun (client, token, channel, API)
+  youtube videos              Daftar video di channel [--max 25] [--json]
+  youtube auth                Login Google (buka URL di browser, token tersimpan lokal)
+           [--account <nama>] Pilih akun (default: akun utama)
+  youtube upload --video <f>  Upload + set judul/deskripsi/jadwal tayang
+           [--title <t>] [--description <teks> | --description-file <f>]
+           [--tags a,b,c] [--privacy public|unlisted|private]
+           [--publish-at "2026-10-05T17:00:00+07:00"]
+           [--account <nama>]  Upload pakai akun tertentu
+           [--thumbnail <f>]   Pasang thumbnail (JPG/PNG, maks 2MB)
+  youtube thumbnail --id <vid> --image <f>  Pasang/ganti thumbnail video
+  youtube update --id <vid>   Ubah judul/deskripsi/privasi/jadwal video
+           [opsi teks sama seperti upload]
 
 CONTOH:
   node run.js status
@@ -33,6 +57,11 @@ CONTOH:
   node run.js stt --input 02-audio/voiceover.mp3
   node run.js images
   node run.js assemble --audio 02-audio/voiceover.mp3
+  node run.js describe
+  node run.js youtube auth
+  node run.js   youtube upload --video 05-video/video.mp4 --privacy unlisted
+  node run.js youtube update --id VIDEO_ID --publish-at "2026-10-05T17:00:00+07:00"
+  node run.js viral --dir "C:/paket/Viral_Explainer_Assets_xxx"
 `;
 
 function cmdStatus() {
@@ -128,6 +157,106 @@ async function cmdAssemble(args) {
   console.log('SELESAI: ' + r);
 }
 
+async function cmdDescribe(args) {
+  const script = argValue(args, 'script', null);
+  const out = argValue(args, 'out', null);
+  const title = argValue(args, 'title', null);
+  const channel = argValue(args, 'channel', null);
+  const stamp = argValue(args, 'stamp', null);
+  const cut = argValue(args, 'cut', null);
+  const titleFile = argValue(args, 'title-file', null);
+  const descFile = argValue(args, 'desc-file', null);
+  const { describe } = require('./lib/describe');
+  const r = describe(script, out, { title, channel, stamp, cut, titleFile, descFile });
+  console.log('SELESAI: ' + r + ' (+ upload-meta.json)');
+}
+
+async function cmdYoutube(args) {
+  const sub = args[0];
+  const rest = args.slice(1);
+  const { cmdAuth, cmdUpload, cmdUpdate, cmdAccounts, cmdDoctor, cmdVideos, cmdThumbnail } = require('./lib/youtube');
+  const account = argValue(rest, 'account', null);
+  if (sub === 'accounts') {
+    console.log(cmdAccounts());
+    return;
+  }
+  if (sub === 'videos') {
+    console.log(await cmdVideos({ account, max: argValue(rest, 'max', '25'), json: hasFlag(rest, 'json') }));
+    return;
+  }
+  if (sub === 'doctor') {
+    console.log(await cmdDoctor({ account }));
+    return;
+  }
+  if (sub === 'auth') {
+    console.log(await cmdAuth({ account }));
+    return;
+  }
+  if (sub === 'upload') {
+    const video = argValue(rest, 'video', null);
+    if (!video) { console.log(USAGE); throw new Error('Perintah youtube upload butuh --video <file>'); }
+    const r = await cmdUpload(video, {
+      account,
+      title: argValue(rest, 'title', null),
+      description: argValue(rest, 'description', null),
+      descriptionFile: argValue(rest, 'description-file', null),
+      tags: argValue(rest, 'tags', null),
+      privacy: argValue(rest, 'privacy', null),
+      publishAt: argValue(rest, 'publish-at', null),
+      thumbnail: argValue(rest, 'thumbnail', null)
+    });
+    console.log('SELESAI: ' + r);
+    return;
+  }
+  if (sub === 'thumbnail') {
+    const id = argValue(rest, 'id', null);
+    const image = argValue(rest, 'image', null);
+    if (!id || !image) { console.log(USAGE); throw new Error('Perintah youtube thumbnail butuh --id <videoId> --image <file>'); }
+    console.log('SELESAI: ' + await cmdThumbnail(id, image, { account }));
+    return;
+  }
+  if (sub === 'update') {
+    const id = argValue(rest, 'id', null);
+    if (!id) { console.log(USAGE); throw new Error('Perintah youtube update butuh --id <videoId>'); }
+    const r = await cmdUpdate(id, {
+      account,
+      title: argValue(rest, 'title', null),
+      description: argValue(rest, 'description', null),
+      descriptionFile: argValue(rest, 'description-file', null),
+      tags: argValue(rest, 'tags', null),
+      privacy: argValue(rest, 'privacy', null),
+      publishAt: argValue(rest, 'publish-at', null),
+      category: argValue(rest, 'category', null)
+    });
+    console.log('SELESAI: ' + r);
+    return;
+  }
+  console.log(USAGE);
+  throw new Error('Sub-perintah youtube: accounts | doctor | auth | upload | update | videos | thumbnail');
+}
+
+async function cmdViral(args) {
+  const { viralInfo, assembleViral } = require('./lib/viral');
+  const packDir = argValue(args, 'dir', null);
+  if (!packDir) { console.log(USAGE); throw new Error('Perintah viral butuh --dir <folder paket>'); }
+  const path = require('path');
+  const fs = require('fs');
+  const abs = path.isAbsolute(packDir) ? packDir : path.join(process.cwd(), packDir);
+  if (!fs.existsSync(abs)) throw new Error('Folder tidak ada: ' + packDir);
+  const info = viralInfo(abs);
+  console.log('PAKET: ' + abs + '\n  scene: ' + info.scenes + '\n  estimasi durasi: ' + Math.floor(info.estSec / 60) + ' mnt ' + (info.estSec % 60) + ' dtk' +
+    '\n  judul: ' + (info.title || '-') + '\n  deskripsi: ' + (info.descFile ? 'ada' : '-') + '\n  thumbnail: ' + (info.thumbnail ? 'ada' : '-'));
+  if (hasFlag(args, 'info')) return;
+  const base = path.basename(abs).replace(/\.zip$/i, '');
+  const outRaw = argValue(args, 'out', path.join(dir('video'), base + '.mp4'));
+  const out = freeOutName(outRaw, hasFlag(args, 'out'));
+  const limit = parseInt(argValue(args, 'limit', '0'), 10) || 0;
+  const engine = argValue(args, 'engine', 'webcodecs');
+  console.log('  mesin: ' + engine);
+  const r = await assembleViral(abs, out, { engine, ...(limit ? { limit } : {}) });
+  console.log('SELESAI: ' + r.file + ' (' + r.scenes + ' scene)');
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const cmd = args[0];
@@ -139,6 +268,9 @@ async function main() {
     case 'stt': await cmdStt(args.slice(1)); break;
     case 'images': await cmdImages(args.slice(1)); break;
     case 'assemble': await cmdAssemble(args.slice(1)); break;
+    case 'describe': await cmdDescribe(args.slice(1)); break;
+    case 'viral': await cmdViral(args.slice(1)); break;
+    case 'youtube': await cmdYoutube(args.slice(1)); break;
     default:
       console.log('Perintah tidak dikenal: ' + cmd);
       console.log(USAGE);

@@ -1,0 +1,37 @@
+VIRAL VIDEO STUDIO - CARA PAKAI DI PC BARU
+==========================================
+
+PC BARU? CUKUP KLIK 2X:
+  ViralVideoStudio.bat   (atau ikon "Viral Video Studio" di Desktop)
+
+  Kalau belum pernah terpasang, aplikasi otomatis menjalankan
+  instalasi dulu: unduh Node.js, unduh ffmpeg/sharp, cek Edge/Chrome.
+  Setelah selesai, aplikasi langsung terbuka. Sekali saja.
+
+INSTALL.bat   = instalasi lengkap (dijalankan otomatis oleh tombol di atas)
+PERBAIKI.bat  = kalau ada komponen rusak / internet sempat putus
+
+YANG DIPASANG OTOMATIS:
+  - Node.js 22 portable (di folder tools, tidak mengganggu sistem)
+  - ffmpeg (gabung audio + mesin rakit cadangan)
+  - sharp (penyesuaian gambar + thumbnail YouTube)
+  - whisper (timestamp otomatis) dan suara Edge TTS
+  - pintasan Desktop
+
+YANG TIDAK PERLU DIPASANG MANUAL:
+  Microsoft Edge / Google Chrome (sudah ada di Windows 10/11).
+  Kalau tidak ada, aplikasi otomatis memakai mesin ffmpeg (lebih lambat
+  tapi tetap jalan).
+
+SYARAT:
+  - Windows 10/11 64-bit
+  - Internet saat instalasi (+-5-15 menit) dan saat upload YouTube
+  - Ruang kosong +-1,5 GB
+
+ALUR DI APLIKASI:
+  1. Akun YouTube  : isi Client + Hubungkan (sekali per akun/channel)
+  2. Buat Materi   : buka link Gemini, unduh ZIP
+  3. Paket ZIP     : pilih ZIP, Rakit Video (atau OTOMATIS sekaligus)
+  4. Deskripsi     : judul + deskripsi otomatis, bisa diedit
+  5. Upload        : pilih akun, privasi, jadwal tayang (atau mode Manual)
+  6. Video Tayang  : lihat video yang sudah ada di channel

@@ -1,6 +1,6 @@
-﻿const { execFileSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
-const ffmpeg = require('ffmpeg-static');
+const ffmpeg = require('./ffmpeg');
 const base = path.join(__dirname, '..');
 const outDir = path.join(base, '04-gambar');
 const fs = require('fs');

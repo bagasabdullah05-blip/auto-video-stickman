@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
-const ffmpeg = require('ffmpeg-static');
+const ffmpeg = require('./ffmpeg');
 const { cfg, dir, resolve } = require('./fsutil');
 const { isValid } = require('./voices');
 
